@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  free2fa_setup:
+    image: clllagob/free2fa:setup_latest
+    volumes:
+      - free2fa_ca_certs:/certs/rootca
+      - free2fa_ca_private:/certs/rootpca
+      - free2fa_admin_api_certs:/certs/free2fa_admin_api
+      - free2fa_admin_html_certs:/certs/free2fa_admin_html
+      - free2fa_api_certs:/certs/free2fa_api
+    environment:
+      - CA_EXPIRY_DAYS=${CA_EXPIRY_DAYS}
+      - ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML=${ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML}
+    networks:
+      - free2fa_ca_network
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /certs/rootca/ca.crt ]"]
+      interval: 1s
+      timeout: 5s
+      retries: 120
+
+  free2fa_admin_html:
+    restart: unless-stopped
+    image: clllagob/free2fa:admin_html_latest
+    volumes:
+      - free2fa_admin_html_certs:/etc/nginx/certs
+      - free2fa_ca_certs:/usr/local/share/ca-certificates/
+    networks:
+       - free2fa_admin_network
+    depends_on:
+      free2fa_admin_api:
+        condition: service_started
+    ports:
+       - "443:443"
+
+  free2fa_admin_api:
+    restart: unless-stopped
+    image: clllagob/free2fa:admin_api_latest
+    environment:
+       - ADMIN_SECRET_KEY=${ADMIN_SECRET_KEY}
+       - RESET_PASSWORD=${RESET_PASSWORD}
+    volumes:
+      - free2fa_db:/opt/db
+      - free2fa_admin_api_certs:/app/certs
+    networks:
+      - free2fa_admin_network
+      - free2fa_ca_network
+    depends_on:
+      free2fa_setup:
+        condition: service_healthy
+
+  free2fa_api:
+    restart: unless-stopped
+    image: clllagob/free2fa:api_latest
+    environment:
+      - FREE2FA_TELEGRAM_BOT_TOKEN=${FREE2FA_TELEGRAM_BOT_TOKEN}
+      - FREE2FA_TELEGRAM_BOT_LANGUAGE=${FREE2FA_TELEGRAM_BOT_LANGUAGE}
+      - FREE2FA_AUTO_REG_ENABLED=${FREE2FA_AUTO_REG_ENABLED}
+      - FREE2FA_BYPASS_ENABLED=${FREE2FA_BYPASS_ENABLED}
+      - FREE2FA_TIMEOUT=${FREE2FA_TIMEOUT}
+      - ALLOW_API_FAILURE_PASS=${ALLOW_API_FAILURE_PASS}
+    volumes:
+      - free2fa_db:/opt/db
+      - free2fa_api_certs:/app/certs
+      - free2fa_ca_certs:/usr/local/share/ca-certificates/
+    networks:
+      - free2fa_network
+    depends_on:
+      free2fa_setup:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+
+volumes:
+  free2fa_db:
+  free2fa_admin_api_certs:
+  free2fa_admin_html_certs:
+  free2fa_ca_certs:
+  free2fa_ca_private:
+  free2fa_api_certs:
+
+networks:
+  free2fa_admin_network:
+    driver: bridge
+  free2fa_network:
+    driver: bridge
+  free2fa_ca_network:
+    driver: bridge

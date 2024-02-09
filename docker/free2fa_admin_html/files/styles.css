@@ -1,0 +1,379 @@
+/* style.css
+Copyright (C) 2024 Voloskov Aleksandr Nikolaevich
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version. */
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: gray;
+  color: #333;
+}
+
+.container {
+  width: 80%;
+  margin: auto;
+  overflow: hidden;
+}
+
+header {
+  background: #333;
+  color: #fff;
+  padding-top: 30px;
+  min-height: 70px;
+  border-bottom: #bbb 1px solid;
+}
+
+header a {
+  color: #fff;
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 16px;
+}
+
+header ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+header li {
+  display: inline;
+  padding: 0 20px;
+}
+
+header #branding {
+  float: left;
+}
+
+h1,
+header nav {
+  margin: 0;
+}
+
+header nav {
+  float: right;
+  margin-top: 10px;
+}
+
+header .highlight,
+header .current a {
+  color: #e8491d;
+  font-weight: 700;
+}
+
+header a:hover {
+  color: #fff;
+  font-weight: 700;
+}
+
+.section {
+  padding: 20px 0;
+  border-bottom: 1px solid #eaeaea;
+}
+
+h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.section form {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+  background-color: #707070;
+  color: #fff;
+  border: 1px solid #606060;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 3px;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #000;
+  box-shadow: 0 0 5px #131313;
+}
+
+.section button,
+.section input[type="submit"],
+* button {
+  background-color: #6a6a6a;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 3px;
+}
+
+.section button:hover,
+.section input[type="submit"]:hover,
+* button:hover {
+  background-color: #5a5a5a;
+}
+
+.section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.section ul li {
+  background: #fff;
+  padding: 10px;
+  margin-bottom: 5px;
+  border: 1px solid gray;
+}
+
+.section ul li button {
+  padding: 5px 10px;
+  margin-left: 10px;
+}
+
+@media (max-width: 700px) {
+  header li,
+  .section form input[type="text"],
+  .section form input[type="number"] {
+    width: 100%;
+    margin: 5px 0;
+  }
+
+  .section form {
+    flex-direction: column;
+  }
+}
+
+.section form button {
+  margin-left: 10px;
+}
+
+#editUserForm {
+  display: flex;
+  align-items: center;
+}
+
+#searchUserForm,
+#changePasswordForm,
+#usersList,
+#addUserForm {
+  display: flex;
+  align-items: center;
+}
+
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background-color: grey;
+  border-radius: 5px;
+  border: 1px solid #000000;
+  position: relative;
+}
+
+input[type="checkbox"]:checked::after {
+  content: "✔";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 16px;
+}
+
+.checkbox-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: #0006;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  width: 80%;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#usersList {
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+
+#usersList button {
+  margin-right: 5px;
+}
+
+#usersList li {
+  padding: 5px;
+  border-bottom: 1px solid gray;
+}
+
+#usersTableContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid gray;
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+#resetPasswordSection,
+#loginSection,
+#changePasswordSection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+.padded-link {
+  padding: 10px;
+  display: block;
+  font-size: 12px;
+}
+
+#mainContent {
+  margin: 10px;
+  padding: 10px;
+}
+
+#downloadCA {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 180px;
+  height: 30px;
+  background-color: grey;
+  border: none;
+}
+
+.notification-success,
+.notification-error {
+  background-color: #4caf50;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px;
+  color: #333;
+  border: none;
+  border-radius: 0;
+  display: none;
+  z-index: 1000;
+}
+
+.notification-error {
+  background-color: #f44336;
+}
+
+#usersTable {
+  width: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+}
+
+#usersTable th,
+#usersTable td {
+  border: 1px solid #5a5a5a;
+  padding: 8px;
+  text-align: left;
+  color: #fff;
+}
+
+#usersTable th {
+  background-color: #6a6a6a;
+  color: #fff;
+}
+
+#usersTable th:nth-child(1),
+#usersTable td:nth-child(1) {
+  width: 200px;
+}
+
+#usersTable thead th {
+  top: 0;
+  background-color: #6a6a6a;
+  z-index: 10;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+#logoutButtonDiv {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+#resetPasswordButtonDiv {
+  margin-top: 10px;
+}
+
+.change-password-button-container {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+#changePasswordButton {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

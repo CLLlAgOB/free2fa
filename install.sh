@@ -127,7 +127,7 @@ Active Directory domain controller (dc01))" 8 78 --title "Configuring Kerberos" 
 check_if_cancel
 
 # Writing Kerberos settings to a temporary file
-cat <<EOF >$TEMP_FILE
+cat <<EOF >"$TEMP_FILE"
 krb5-config krb5-config/default_realm string $DOMAIN_LOCAL
 krb5-config krb5-config/kerberos_servers string $KERBEROS_SERVER
 krb5-config krb5-config/admin_server string $ADMIN_SERVER
@@ -136,10 +136,10 @@ krb5-config krb5-config/add_servers boolean false
 EOF
 
 # Applying the settings from the temporary file
-debconf-set-selections $TEMP_FILE
+debconf-set-selections "$TEMP_FILE"
 
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # installation of required packages.
 apt-get update
@@ -152,7 +152,7 @@ check_if_cancel
 
 # Logging in to the domain
 echo "Logging into the $DOMAIN domain using the $USER user..."
-realm join $DOMAIN --user=$USER
+realm join "$DOMAIN" --user="$USER"
 
 echo "The operation is done."
 
@@ -220,7 +220,7 @@ CONFIG_FILE_SITE="/etc/freeradius/3.0/sites-enabled/default"
 TEMP_FILE=$(mktemp)
 
 # Writing Kerberos settings to a temporary file
-cat <<EOF >$TEMP_FILE
+cat <<EOF >"$TEMP_FILE"
 [libdefaults]
 default_realm = $DOMAIN_UPPERCASE
 dns_lookup_realm = false
@@ -238,10 +238,10 @@ EOF
 
 # Adding KDC servers
 for server in $KERBEROS_SERVER; do
-    echo "                kdc = $server" >> $TEMP_FILE
+    echo "                kdc = $server" >> "$TEMP_FILE"
 done
 
-cat <<EOF >>$TEMP_FILE
+cat <<EOF >>"$TEMP_FILE"
                 admin_server = $ADMIN_SERVER
                 default_domain = $DOMAIN
         }
@@ -252,10 +252,10 @@ cat <<EOF >>$TEMP_FILE
 EOF
 
 
-cp $TEMP_FILE $CONFIG_FILE_KRB5
+cp "$TEMP_FILE" "$CONFIG_FILE_KRB5"
 
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # Function to generate a random key
 generate_random_key() {
@@ -360,7 +360,7 @@ fi
 TEMP_FILE=$(mktemp)
 
 # Записываем настройки Kerberos во временный файл
-cat <<'EOF' >$TEMP_FILE
+cat <<'EOF' >"$TEMP_FILE"
 server default {
     listen {
         type = auth
@@ -418,16 +418,16 @@ server default {
 }
 EOF
 
-cp $TEMP_FILE $CONFIG_FILE_SITE
+cp "$TEMP_FILE" "$CONFIG_FILE_SITE"
 
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
 # Writing Kerberos settings to a temporary file
-cat <<'EOF' >$TEMP_FILE
+cat <<'EOF' >"$TEMP_FILE"
 rest {
     tls {
         check_cert = yes
@@ -458,41 +458,41 @@ rest {
 }
 EOF
 
-cp $TEMP_FILE $CONFIG_FILE_REST
+cp "$TEMP_FILE" "$CONFIG_FILE_REST"
 
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
 # Writing Kerberos settings to a temporary file
-cat <<EOF >$TEMP_FILE
+cat <<EOF >"$TEMP_FILE"
 pam {
         pam_auth = passwd
 }
 EOF
 
-cp $TEMP_FILE $CONFIG_FILE_PAM
+cp "$TEMP_FILE" "$CONFIG_FILE_PAM"
 
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
 # Write the settings to a temporary file
-cat <<EOF >$TEMP_FILE
+cat <<EOF >"$TEMP_FILE"
 client rdg {
   ipaddr = $RADIUS_CLIENT_IP
   secret = $CLIENT_SECRET
 }
 EOF
 
-cp $TEMP_FILE $CONFIG_FILE_CLIENT
+cp "$TEMP_FILE" "$CONFIG_FILE_CLIENT"
 
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
@@ -503,7 +503,7 @@ PATH_TO_CA_CERT="/var/lib/docker/volumes/${CURRENT_FOLDER}_free2fa_ca_certs/_dat
 
 
 # start service script
-cat <<EOF >$TEMP_FILE
+cat <<EOF >"$TEMP_FILE"
 #!/bin/bash
 
 #  Go to the directory with docker-compose.yml
@@ -544,17 +544,17 @@ service freeradius start
 echo "FreeRADIUS has been successfully started."
 EOF
 
-cp $TEMP_FILE $START_SERVICE
+cp "$TEMP_FILE" "$START_SERVICE"
 
-chmod +x $START_SERVICE
+chmod +x "$START_SERVICE"
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
 # Write the stop services script to a temporary file.
-cat <<EOF >$TEMP_FILE
+cat <<EOF >"$TEMP_FILE"
 #!/bin/bash
 
 # Go to the directory with docker-compose.yml
@@ -569,17 +569,17 @@ service freeradius stop
 echo "The services have been successfully stopped."
 EOF
 
-cp $TEMP_FILE $STOP_SERVICE
+cp "$TEMP_FILE" "$STOP_SERVICE"
 
-chmod +x $STOP_SERVICE
+chmod +x "$STOP_SERVICE"
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
 # Write the start services script to a temporary file.
-cat <<EOF >$TEMP_FILE
+cat <<EOF >"$TEMP_FILE"
 [Unit]
 Description=Free2fa and FreeRADIUS
 After=network.target docker.service
@@ -596,10 +596,10 @@ RemainAfterExit=yes
 WantedBy=multi-user.target
 EOF
 
-cp $TEMP_FILE $FREE2FA_SERVICE
+cp "$TEMP_FILE" "$FREE2FA_SERVICE"
 
 # Deleting the temporary file
-rm $TEMP_FILE
+rm "$TEMP_FILE"
 systemctl stop freeradius
 systemctl disable freeradius
 systemctl enable free2fa.service

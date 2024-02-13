@@ -23,7 +23,7 @@ the Free Software Foundation, either version 3 of the License, or
     <div id="loginSection">
       <h2>Login</h2>
       <form id="loginForm">
-        <input type="text" id="loginUsername" placeholder="Username" required />
+        <input type="text" id="loginUsername" placeholder="domain\username" required />
         <input
           type="password"
           id="loginPassword"
@@ -81,7 +81,7 @@ the Free Software Foundation, either version 3 of the License, or
     <div id="mainContent" style="display: none">
       <h2>Add User</h2>
       <form id="addUserForm">
-        <input type="text" id="username" placeholder="Username" required />
+        <input type="text" id="username" placeholder="domain\username" required />
         <input
           type="number"
           id="telegramId"
@@ -115,7 +115,7 @@ the Free Software Foundation, either version 3 of the License, or
         <input
           type="text"
           id="searchUsername"
-          placeholder="Domain\Username to search"
+          placeholder="domain\username to search"
           required
         />
         <button type="submit">Search</button>
@@ -129,7 +129,7 @@ the Free Software Foundation, either version 3 of the License, or
       <div id="editUserSection" style="display: none">
         <form id="editUserForm">
           <input type="hidden" id="editUsernameOriginal" />
-          <input type="text" id="editUsername" placeholder="New Username" />
+          <input type="text" id="editUsername" placeholder="domain\username" />
           <input
             type="number"
             id="editTelegramId"
@@ -171,6 +171,11 @@ the Free Software Foundation, either version 3 of the License, or
             "none";
         });
 
+      function validateUsernameFormat(username) {
+        const regex = /^[^\s\\]+\\[^\s\\]+$/;
+        return regex.test(username);
+      }
+      
       function showNotification(message, type = "success") {
         const notification = document.getElementById("notification");
         notification.textContent = message;
@@ -265,6 +270,10 @@ the Free Software Foundation, either version 3 of the License, or
         .addEventListener("submit", async function (e) {
           e.preventDefault();
           const username = document.getElementById("username").value;
+          if (!validateUsernameFormat(username)) {
+            alert("Username must be in the format domain\\user.");
+            return;
+          }
           const telegramId = document.getElementById("telegramId").value;
           const isBypass = document.getElementById("isBypass").checked;
 
@@ -378,6 +387,10 @@ the Free Software Foundation, either version 3 of the License, or
               document.getElementById("originalUsername").value,
             );
             const newUsername = document.getElementById("editUsername").value;
+            if (!validateUsernameFormat(newUsername)) {
+              alert("Username must be in the format domain\\user.");
+              return;
+            }
             const newTelegramId =
               document.getElementById("editTelegramId").value;
             const newisBypass = document.getElementById("editisBypass").checked;

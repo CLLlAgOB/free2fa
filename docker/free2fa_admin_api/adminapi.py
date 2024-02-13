@@ -337,6 +337,7 @@ async def add_user(user: User, _: User = Depends(get_current_user)):
     Returns:
         dict: Confirmation message upon successful addition of the user.
     """
+    user.domain_and_username = user.domain_and_username.lower()
     sql_query = (
         'INSERT INTO users (domain_and_username, telegram_id, is_bypass) '
         'VALUES (?, ?, ?)'
@@ -442,7 +443,8 @@ async def update_user(username: str, user_update: UserUpdate = Body(...),
     Returns:
         dict: A confirmation message upon successful update of the user.
     """
-
+    username = username.lower()
+    user_update.domain_and_username = user_update.domain_and_username.lower()
     logger.info("Updating user")
     try:
         async with aiosqlite.connect(DATABASE_PATH) as db_connection:

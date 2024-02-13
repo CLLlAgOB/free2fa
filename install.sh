@@ -59,7 +59,7 @@ check_if_cancel() {
 
 # Requesting a domain name
 DOMAIN=$(whiptail --inputbox "Enter the domain name (for example, domain.local). Enter in lower case:" 8 78 --title "Domain Name" 3>&1 1>&2 2>&3)
-
+DOMAIN=${DOMAIN,,} 
 check_if_cancel
 
 # Проверяем, резолвится ли домен
@@ -398,6 +398,23 @@ server __default__ {
                 User-Name := "%{Tmp-String-1}\\\\%{Tmp-String-0}"
            }
         }
+        elsif (&User-Name =~ /^([^.]+)\.([^\\]+)\\(.+)$/) {
+            update request {
+                Tmp-String-0 := "%{tolower:%{1}}"
+                Tmp-String-1 := "%{tolower:%{3}}"
+                User-Name := "%{Tmp-String-0}\\\\%{Tmp-String-1}"
+            }
+        }
+        elsif (&User-Name =~ /^[A-Za-zА\.]+$/) {
+            update request {
+                User-Name := "__domain__\\\\%{tolower:%{User-Name}}"
+            }
+        }
+        elsif (&User-Name =~ /^[A-Za-z\.]+\\\\[A-Za-z]+$/) {
+            update request {
+                User-Name := "%{tolower:%{User-Name}}"
+            }
+        }
         if (!&User-Password) {
             update control {
                 Auth-Type := Reject
@@ -439,7 +456,7 @@ EOF
 
 sed "s/__default__/$RADIUS_SITE_NAME/g" $TEMP_FILE > $CONFIG_FILE_SITE
 sed -i "s/__port__/$RADIUS_PORT_NUMBER/g" $CONFIG_FILE_SITE
-
+sed -i "s/__domain__/$DOMAIN/g" $CONFIG_FILE_SITE
 
 
 # Deleting the temporary file

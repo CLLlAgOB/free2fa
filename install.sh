@@ -392,7 +392,7 @@ server __default__ {
         }
     }
     authorize {
-        if (&User-Name =~ /(.+)@([^\.]+)\./) {
+        if (&User-Name =~ /(.+)@([^\.]+)/) {
             update request {
                 Tmp-String-0 := "%{tolower:%{1}}"
                 Tmp-String-1 := "%{tolower:%{2}}"

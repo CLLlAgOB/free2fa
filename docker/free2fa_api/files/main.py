@@ -49,32 +49,27 @@ last_message_info = {}
 
 def response_200():
     """Response api code 200 OK"""
-    return JSONResponse(status_code=200, content={"message": "OK"})
+    return JSONResponse(status_code=200, content={"Reply-Message": "OK"})
 
 
 def response_403():
     """Response api code 403 Forbidden"""
-    return JSONResponse(status_code=403, content={"message": "Forbidden"})
+    return JSONResponse(status_code=403, content={"Reply-Message": "Forbidden"})
 
 
 def response_404():
     """Response api code 404 Not Found"""
-    return JSONResponse(status_code=403, content={"message": "Not Found"})
+    return JSONResponse(status_code=403, content={"Reply-Message": "Not Found"})
 
 
 def response_408():
     """Response api code 408 Timeout"""
-    return JSONResponse(status_code=403, content={"message": "Timeout"})
+    return JSONResponse(status_code=403, content={"Reply-Message": "Timeout"})
 
 
 class ClientKeyStorage:
     """API key control class"""
     _client_key = None
-
-    @classmethod
-    def get_client_key(cls):
-        """Return API key"""
-        return cls._client_key
 
     @classmethod
     def verify_and_set_key(cls, key):
@@ -88,12 +83,6 @@ class ClientKeyStorage:
         else:
             logger.warning("Invalid API KEY")
             return "invalid"
-
-
-class AuthorizeRequest(BaseModel):
-    """Defining a Pydantic model class for a query /authorize"""
-    user_name: str
-    client_key: str
 
 
 class AuthenticateRequest(BaseModel):
@@ -196,8 +185,8 @@ async def authenticate_user(request: AuthenticateRequest):
     key_status = ClientKeyStorage.verify_and_set_key(client_key)
 
     if key_status == "invalid":
-        return response_404()
-    elif key_status == "set" and request.user_name == "key":
+        return response_403()
+    if key_status == "set" and request.user_name == "key":
         return response_200()
 
     if request.user_name != "":

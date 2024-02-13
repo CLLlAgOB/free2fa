@@ -62,6 +62,15 @@ DOMAIN=$(whiptail --inputbox "Enter the domain name (for example, domain.local).
 
 check_if_cancel
 
+# Проверяем, резолвится ли домен
+if nslookup "$DOMAIN" > /dev/null; then
+    echo "Domain $DOMAIN is resolved successfully."
+else
+    echo "Error: Domain $DOMAIN cannot be resolved. Check your domain name or DNS settings."
+    exit 1
+fi
+
+
 # Convert the domain name to uppercase for use in configurations where you want to
 DOMAIN_UPPERCASE=$(echo "$DOMAIN" | tr '[:lower:]' '[:upper:]')
 
@@ -145,16 +154,23 @@ rm "$TEMP_FILE"
 apt-get update
 NEEDRESTART_MODE=a apt-get install -y --no-install-recommends ca-certificates curl sssd sssd-tools libnss-sss libpam-sss adcli realmd krb5-user freeradius freeradius-rest freeradius-utils
 
-# Requesting a username
-USER=$(whiptail --inputbox "Enter a user name to enter the server into the domain" 8 78 --title "User Name" 3>&1 1>&2 2>&3)
+if realm list | grep -q "domain-name"; then
+    echo "Server is already joined to a domain."
+else
+    # Requesting a username
+    USER=$(whiptail --inputbox "Enter a user name to enter the server into the domain" 8 78 --title "User Name" 3>&1 1>&2 2>&3)
 
-check_if_cancel
+    check_if_cancel
 
-# Logging in to the domain
-echo "Logging into the $DOMAIN domain using the $USER user..."
-realm join "$DOMAIN" --user="$USER"
-
-echo "The operation is done."
+    # Logging in to the domain
+    echo "Logging into the $DOMAIN domain using the $USER user..."
+    if realm join "$DOMAIN" --user="$USER"; then
+        echo "Successfully joined the domain $DOMAIN."
+    else
+        echo "Error: Failed to join the domain $DOMAIN."
+        exit 1
+    fi
+fi
 
 # Ask the user whether to allow login by short names
 if whiptail --yesno "Allow login by short names without specifying a domain?" 20 60 --defaultno; then
@@ -164,7 +180,7 @@ else
 fi
 
 # Asking which groups are allowed to log in
-ALLOW_GROUPS=$(whiptail --inputbox "Enter the groups allowed to authorize, separated by commas (e.g., vpn@domain.local, vpn2@domain.local)" 20 60 3>&1 1>&2 2>&3)
+ALLOW_GROUPS=$(whiptail --inputbox "Enter the groups allowed to authorize, separated by commas (e.g., vpn@domain.local,vpn2@domain.local)" 20 60 3>&1 1>&2 2>&3)
 
 check_if_cancel
 
@@ -184,14 +200,14 @@ cp "$SSSD_CONF" "${SSSD_CONF}.bak"
 # Changing the use_fully_qualified_names settings
 sed -i "s/^use_fully_qualified_names = .*/use_fully_qualified_names = $USE_FULLY_QUALIFIED_NAMES/" "$SSSD_CONF"
 
-sed -i "s/^access_provider = .*/access_provider = simple/" "$SSSD_CONF"
+sed -i "s/^access_provider = .*/access_provider = permit/" "$SSSD_CONF"
 
-# Add or update the simple_allow_groups setting
-if grep -q "^simple_allow_groups" "$SSSD_CONF"; then
-    sed -i "s/^simple_allow_groups = .*/simple_allow_groups = $ALLOW_GROUPS/" "$SSSD_CONF"
-else
-    echo "simple_allow_groups = $ALLOW_GROUPS" | tee -a "$SSSD_CONF"
-fi
+# # Add or update the simple_allow_groups setting
+# if grep -q "^simple_allow_groups" "$SSSD_CONF"; then
+#     sed -i "s/^simple_allow_groups = .*/simple_allow_groups = $ALLOW_GROUPS/" "$SSSD_CONF"
+# else
+#     echo "simple_allow_groups = $ALLOW_GROUPS" | tee -a "$SSSD_CONF"
+# fi
 
 # Add or update the ad_gpo_ignore_unreadable setting
 if grep -q "^ad_gpo_ignore_unreadable" "$SSSD_CONF"; then
@@ -206,16 +222,21 @@ sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
 systemctl restart sshd
 systemctl restart sssd
 
-CONFIG_FILE_RADIUS="/etc/freeradius/3.0/radiusd.conf"
-CONFIG_FILE_CLIENT="/etc/freeradius/3.0/clients.conf"
+ROOT_DIR="/etc/freeradius/3.0/"
+CONFIG_FILE_RADIUS="${ROOT_DIR}radiusd.conf"
+CONFIG_FILE_CLIENT="${ROOT_DIR}clients.conf"
 START_SERVICE="$PWD/start_service.sh"
 STOP_SERVICE="$PWD/stop_service.sh"
 FREE2FA_SERVICE="/etc/systemd/system/free2fa.service"
 CONFIG_FILE_KRB5="/etc/krb5.conf"
-CONFIG_FILE_REST="/etc/freeradius/3.0/mods-enabled/rest"
-CONFIG_FILE_PAM="/etc/freeradius/3.0/mods-enabled/pam"
-CONFIG_FILE_SITE="/etc/freeradius/3.0/sites-enabled/default"
+CONFIG_FILE_REST="${ROOT_DIR}mods-available/rest"
+CONFIG_FILE_PAM="${ROOT_DIR}mods-available/pam"
+CONFIG_FILE_SITE="${ROOT_DIR}sites-available/"
+EXEC_MOD="${ROOT_DIR}mods-available/exec"
+SCRIPT_DIR="${ROOT_DIR}scripts/"
+CHECK_GROUP_SCRIPT="${SCRIPT_DIR}check_group_membership.sh"
 
+mkdir -p $SCRIPT_DIR
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
@@ -317,6 +338,10 @@ prompt_env_configuration() {
     check_if_cancel
     ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML=$(whiptail --inputbox "Enter ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML (default free2fa):" 8 78 free2fa --title "ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML" 3>&1 1>&2 2>&3)
     check_if_cancel
+    RADIUS_SITE_NAME=$(whiptail --inputbox "Enter RADIUS SITE NAME (default 2fa_default):" 8 78 "2fa_default" --title "RADIUS_SITE_NAME" 3>&1 1>&2 2>&3)
+    check_if_cancel
+    RADIUS_PORT_NUMBER=$(whiptail --inputbox "Enter RADIUS port number (default 1812):" 8 78 "1812" --title "RADIUS_PORT_NUMBER" 3>&1 1>&2 2>&3)
+    check_if_cancel
     create_env_file
 }
 
@@ -329,16 +354,9 @@ download_docker_compose_yml() {
 prompt_env_configuration
 download_docker_compose_yml
 
-# Default values
-CLIENT_SECRET=${RADIUS_CLIENT_SECRET:-"test123"}
-RADIUS_CLIENT_TIMEOUT=${RADIUS_CLIENT_TIMEOUT:-10}
-RADIUS_CLIENT_IP=${RADIUS_CLIENT_IP:-"0.0.0.0"}
-RADIUS_START_SERVERS=${RADIUS_START_SERVERS:-5}
-RADIUS_MAX_SERVERS=${RADIUS_MAX_SERVERS:-32}
-RADIUS_MAX_SPARE_SERVERS=${RADIUS_MAX_SPARE_SERVERS:-10}
-RADIUS_MIN_SPARE_SERVERS=${RADIUS_MIN_SPARE_SERVERS:-3}
+CONFIG_FILE_SITE="$CONFIG_FILE_SITE$RADIUS_SITE_NAME"
 
-key_file="/etc/freeradius/3.0/key"
+key_file="${ROOT_DIR}key"
 
 # Check if the file exists
 if [ ! -f "$key_file" ]; then
@@ -359,20 +377,19 @@ fi
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
-# Записываем настройки Kerberos во временный файл
+# Записываем настройки SITE config во временный файл
 cat <<'EOF' >"$TEMP_FILE"
-server default {
+server __default__ {
     listen {
         type = auth
         ipaddr = *
-        port = 1812
+        port = __port__
         limit {
             max_connections = 100
             lifetime = 0
             idle_timeout = 60
         }
     }
-
     authorize {
         if (&User-Name =~ /(.+)@([^\.]+)\./) {
              update request {
@@ -387,6 +404,7 @@ server default {
             }
         }
         else {
+            check_membership
             update control {
                 Auth-Type := PAM
             }
@@ -418,7 +436,11 @@ server default {
 }
 EOF
 
-cp "$TEMP_FILE" "$CONFIG_FILE_SITE"
+
+sed "s/__default__/$RADIUS_SITE_NAME/g" $TEMP_FILE > $CONFIG_FILE_SITE
+sed -i "s/__port__/$RADIUS_PORT_NUMBER/g" $CONFIG_FILE_SITE
+
+
 
 # Deleting the temporary file
 rm "$TEMP_FILE"
@@ -426,7 +448,93 @@ rm "$TEMP_FILE"
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
-# Writing Kerberos settings to a temporary file
+# Writing check group membership settings to a temporary file
+cat <<'EOF' >"$TEMP_FILE"
+exec check_membership {
+    wait = yes
+    program = "__script__ %{User-Name} __groups__"
+    input_pairs = request
+    output_pairs = reply
+    shell_escape = yes
+}
+EOF
+
+sed "s|__script__|$CHECK_GROUP_SCRIPT|g" $TEMP_FILE > $EXEC_MOD
+sed -i "s/__groups__/$ALLOW_GROUPS/g" $EXEC_MOD 
+
+
+# Creating a temporary file
+TEMP_FILE=$(mktemp)
+
+# Writing check group membership settings to a temporary file
+cat <<'EOF' >"$TEMP_FILE"
+#!/bin/bash
+
+# Get username and group string from command line arguments
+USERNAME="$1"
+GROUPS_STRING="$2"
+
+# Path to the log file for debugging
+LOG_FILE="/var/log/freeradius/group_check.log"
+
+# Write the obtained parameters to a log file for debugging
+echo "Received parameters: USERNAME=$USERNAME, GROUPS_STRING=$GROUPS_STRING" >> "$LOG_FILE"
+
+# Check the USERNAME format against the expected format
+# Assume that valid usernames contain only letters, numbers, hyphens, periods and underscores
+if ! [[ "$USERNAME" =~ ^[a-zA-Z0-9\.\-_\\]+$ ]]; then
+    echo "Invalid username format" >> "$LOG_FILE"
+    #echo "Reply-Message = \"Invalid username format\""
+    exit 1
+fi
+
+# Convert the username to work correctly with the id command
+username_sanitized=$(echo "$USERNAME" | sed 's|\\\\|\\|g')
+
+# Function for checking whether the user belongs to a group
+check_group_membership() {
+    local username="$1"
+
+    # Get the list of user groups
+    user_groups=$(id -nG "$username" 2>/dev/null)
+    if [ $? -ne 0 ]; then
+        echo "User $username does not exist" >> "$LOG_FILE"
+        # Return attribute for FreeRADIUS
+        #echo "Reply-Message = \"User $username does not exist\""
+        exit 1
+    fi
+
+    # Convert the string of groups into an array
+    IFS=',' read -r -a REQUIRED_GROUPS <<< "$GROUPS_STRING"
+
+    for group in "${REQUIRED_GROUPS[@]}"; do
+        if [[ " $user_groups " =~ " $group " ]]; then
+            echo "User $username is a member of group $group" >> "$LOG_FILE"
+            # Return attribute for FreeRADIUS
+            #echo "Reply-Message = \"User $username is a member of group $group\""
+            exit 0
+        fi
+    done
+
+    # If the user does not belong to any of the required groups
+    echo "User $username does not belong to any required group" >> "$LOG_FILE"
+    # Return attribute for FreeRADIUS
+    echo "Reply-Message = \"User $username does not belong to any required group\""
+    exit 1
+}
+
+check_group_membership "$username_sanitized" "$GROUPS_STRING"
+EOF
+
+cp "$TEMP_FILE" "$CHECK_GROUP_SCRIPT"
+
+# Deleting the temporary file
+rm "$TEMP_FILE"
+
+# Creating a temporary file
+TEMP_FILE=$(mktemp)
+
+# Writing REST settings to a temporary file
 cat <<'EOF' >"$TEMP_FILE"
 rest {
     tls {
@@ -435,7 +543,7 @@ rest {
     }
 
     connect_uri = "https://localhost:5000"
-    connect_timeout = $((RADIUS_CLIENT_TIMEOUT + 3))
+    connect_timeout = __timeout3__
 
     authenticate {
         uri = "${..connect_uri}/authenticate"
@@ -443,7 +551,7 @@ rest {
         body = 'json'
         data = '{ "user_name": "%{User-Name}", "client_key": "FREE2FA_API_KEY" }'
         tls = ${..tls}
-        timeout = 3
+        timeout = __timeout2__
     }
 
     pool {
@@ -458,7 +566,8 @@ rest {
 }
 EOF
 
-cp "$TEMP_FILE" "$CONFIG_FILE_REST"
+sed "s/__timeout3__/$((FREE2FA_TIMEOUT + 3))/g" "$TEMP_FILE" > "$CONFIG_FILE_REST"
+sed -i "s/__timeout2__/$((FREE2FA_TIMEOUT + 2))/g" "$CONFIG_FILE_REST"
 
 # Deleting the temporary file
 rm "$TEMP_FILE"
@@ -466,7 +575,7 @@ rm "$TEMP_FILE"
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
 
-# Writing Kerberos settings to a temporary file
+# Writing pam settings to a temporary file
 cat <<EOF >"$TEMP_FILE"
 pam {
         pam_auth = passwd
@@ -483,9 +592,9 @@ TEMP_FILE=$(mktemp)
 
 # Write the settings to a temporary file
 cat <<EOF >"$TEMP_FILE"
-client rdg {
+client $RADIUS_SITE_NAME {
   ipaddr = $RADIUS_CLIENT_IP
-  secret = $CLIENT_SECRET
+  secret = $RADIUS_CLIENT_SECRET
 }
 EOF
 
@@ -508,7 +617,7 @@ cat <<EOF >"$TEMP_FILE"
 
 #  Go to the directory with docker-compose.yml
 cd "$CURRENT_DIR"
-
+PATH_TO_CA_CERT=$PATH_TO_CA_CERT
 # Starting Docker Compose
 docker-compose up -d
 
@@ -534,8 +643,12 @@ until curl -s --cacert $PATH_TO_CA_CERT -o /dev/null -w '%{http_code}' https://l
     echo "Waiting for the launch of Docker service..."
     sleep 5
 done
-
-
+key_file_path=$key_file
+EOF
+cat <<'EOF' >>"$TEMP_FILE"
+key=$(cat $key_file_path) # Reading a key from a file
+data="{\"user_name\": \"key\", \"client_key\": \"$key\"}"
+curl -s --cacert $PATH_TO_CA_CERT -X POST -H "Content-Type: application/json" -d "$data" https://localhost:5000/authenticate
 
 echo "Docker Compose has been successfully started."
 
@@ -604,9 +717,9 @@ systemctl stop freeradius
 systemctl disable freeradius
 systemctl enable free2fa.service
 
+rm /etc/freeradius/3.0/sites-enabled/default
+
 # Updating configuration files
-sed -i "/^rest {/,/^}/ s/connect_timeout = .*/connect_timeout = $((RADIUS_CLIENT_TIMEOUT + 3))/" "$CONFIG_FILE_REST"
-sed -i "/^rest {/,/^}/ { /    authenticate {/,/    }/ s/timeout = .*/timeout = $((RADIUS_CLIENT_TIMEOUT + 3))/ }" "$CONFIG_FILE_REST"
 sed -i "s/\"client_key\": \".*\"/\"client_key\": \"$random_key\"/" "$CONFIG_FILE_REST"
 sed -i "s/start_servers = .*/start_servers = $RADIUS_START_SERVERS/" "$CONFIG_FILE_RADIUS"
 sed -i "s/max_servers = .*/max_servers = $RADIUS_MAX_SERVERS/" "$CONFIG_FILE_RADIUS"
@@ -617,8 +730,15 @@ sed -i "s/destination = .*/destination = stdout/" "$CONFIG_FILE_RADIUS"
 echo "Configuration updated."
 
 # Setting access rights to configuration files
-chmod 440 /etc/freeradius/3.0/mods-enabled/rest /etc/freeradius/3.0/mods-enabled/pam /etc/freeradius/3.0/sites-enabled/default
-chown root:freerad /etc/freeradius/3.0/mods-enabled/rest /etc/freeradius/3.0/mods-enabled/pam /etc/freeradius/3.0/sites-enabled/default
+
+chmod 440 $CONFIG_FILE_REST $CONFIG_FILE_PAM $CONFIG_FILE_SITE $CHECK_GROUP_SCRIPT
+chown freerad:freerad $CONFIG_FILE_REST $CONFIG_FILE_PAM $CONFIG_FILE_SITE $CHECK_GROUP_SCRIPT
+
+chmod +x $CHECK_GROUP_SCRIPT
+ln -s $CONFIG_FILE_REST ${ROOT_DIR}mods-enabled/rest
+ln -s $CONFIG_FILE_PAM ${ROOT_DIR}mods-enabled/pam 
+ln -s $CONFIG_FILE_SITE ${ROOT_DIR}sites-enabled/$RADIUS_SITE_NAME
+
 if whiptail --yesno "Output the resulting configs to the console?" 10 60; then
     # If the user selected "Yes", output the contents of the configuration files
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
@@ -641,11 +761,11 @@ if whiptail --yesno "Output the resulting configs to the console?" 10 60; then
     echo -e "\033[34mContent /etc/freeradius/3.0/mods-enabled/pam:\033[0m\n"
     cat /etc/freeradius/3.0/mods-enabled/pam
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/freeradius/3.0/sites-enabled/default:\033[0m \n"
-    cat /etc/freeradius/3.0/sites-enabled/default
+    echo -e "\033[34mContent /etc/freeradius/3.0/sites-available/$RADIUS_SITE_NAME:\033[0m \n"
+    cat /etc/freeradius/3.0/sites-available/$RADIUS_SITE_NAME
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
     read -n 1 -s -r -p "Press any key to continue..."
-    echo "" # Для перевода строки после продолжения
+    echo ""
 else
     # If the user selects "No", simply terminate the script
     echo "The output of the configuration files is omitted."

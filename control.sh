@@ -115,10 +115,20 @@ config_action() {
 add_config() {
     read -p "Enter a base name for the new configuration: " config_name
     full_config_name="2fa_$config_name"
+    config_file="/etc/sssd/sssd.conf"
+    krb5_realm_cleaned=$(awk -F' = ' '/^krb5_realm/ {split($2,a,"."); print tolower(a[1])}' $config_file)
+    use_fully_qualified_names=$(awk -F' = ' '/^use_fully_qualified_names/ {print $2}' $config_file)
     read -p "Enter the base port for the new configuration: " config_port
     read -p "Enter the IP address of the client: " ip
     read -p "Enter the secret for the client: " secret
-    read -p "Enter the groups that are allowed access in the format groupname@domain.local,group2@domain.local : " groups
+    if [[ $use_fully_qualified_names == "True" ]]; then
+        read -p "Enter the groups that are allowed access in the format groupname@domain.local,group2@domain.local: " groups
+    else
+        read -p "Enter the groups that are allowed access in the format groupname,group: " groups
+    fi
+    # Find and output the value for the use_fully_qualified_names key
+    
+    
     # Creating a temporary file
     TEMP_FILE=$(mktemp)
 
@@ -136,12 +146,31 @@ server __default__ {
         }
     }
     authorize {
-        if (&User-Name =~ /(.+)@([^\.]+)\./) {
+        if (&User-Name =~ /(.+)@([^\.]+)/) {
             update request {
                 Tmp-String-0 := "%{tolower:%{1}}"
                 Tmp-String-1 := "%{tolower:%{2}}"
                 User-Name := "%{Tmp-String-1}\\\\%{Tmp-String-0}"
+           }
         }
+        elsif (&User-Name =~ /^([^.]+)\.([^\\]+)\\(.+)$/) {
+            update request {
+                Tmp-String-0 := "%{tolower:%{1}}"
+                Tmp-String-1 := "%{tolower:%{3}}"
+                User-Name := "%{Tmp-String-0}\\\\%{Tmp-String-1}"
+            }
+        }
+        elsif (&User-Name =~ /^[A-Za-z0-9\.\-_]+$/) {
+            if ("__use_fully_qualified_names__" == "False") {
+                update request {
+                    User-Name := "__domain__\\\\%{tolower:%{User-Name}}"
+                }
+            }
+        }
+        elsif (&User-Name =~ /^[A-Za-z\.]+\\\\[A-Za-z]+$/) {
+            update request {
+                User-Name := "%{tolower:%{User-Name}}"
+            }
         }
         if (!&User-Password) {
             update control {
@@ -182,10 +211,11 @@ server __default__ {
 EOF
 
 
-    sed "s/__default__/$full_config_name/g" $TEMP_FILE > "${CONFIG_FILE_SITE}${full_config_name}"
+    sed "s/__default__/$full_config_name/g" "$TEMP_FILE" > "${CONFIG_FILE_SITE}${full_config_name}"
     sed -i "s/__port__/$config_port/g" "${CONFIG_FILE_SITE}${full_config_name}"
     sed -i "s/__check_membership__/exec_$full_config_name/g" "${CONFIG_FILE_SITE}${full_config_name}"
-    
+    sed -i "s/__use_fully_qualified_names__/$use_fully_qualified_names/g" "${CONFIG_FILE_SITE}${full_config_name}"
+    sed -i "s/__domain__/$krb5_realm_cleaned/g" "${CONFIG_FILE_SITE}${full_config_name}"
 
         # Client Configuration Template
     template="client __name__ {
@@ -235,7 +265,7 @@ while true; do
     echo "Select an action:"
     echo "1. Configuration management"
     echo "2. Add a new configuration"
-    echo "3. Output"
+    echo "3. Exit"
     read -p "Your choice: " choice
 
     case $choice in

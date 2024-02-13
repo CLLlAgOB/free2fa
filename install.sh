@@ -457,10 +457,10 @@ server __default__ {
 EOF
 
 shortdomain="${DOMAIN%%.*}"
-sed "s/__default__/$RADIUS_SITE_NAME/g" $TEMP_FILE > $CONFIG_FILE_SITE
-sed -i "s/__port__/$RADIUS_PORT_NUMBER/g" $CONFIG_FILE_SITE
-sed -i "s/__domain__/$shortdomain/g" $CONFIG_FILE_SITE
-sed -i "s/__shortname__/$USE_FULLY_QUALIFIED_NAMES/g" $CONFIG_FILE_SITE
+sed "s/__default__/$RADIUS_SITE_NAME/g" "$TEMP_FILE" > "$CONFIG_FILE_SITE"
+sed -i "s/__port__/$RADIUS_PORT_NUMBER/g" "$CONFIG_FILE_SITE"
+sed -i "s/__domain__/$shortdomain/g" "$CONFIG_FILE_SITE"
+sed -i "s/__shortname__/$USE_FULLY_QUALIFIED_NAMES/g" "$CONFIG_FILE_SITE"
 
 # Deleting the temporary file
 rm "$TEMP_FILE"
@@ -479,8 +479,8 @@ exec check_membership {
 }
 EOF
 
-sed "s|__script__|$CHECK_GROUP_SCRIPT|g" $TEMP_FILE > $EXEC_MOD
-sed -i "s/__groups__/$ALLOW_GROUPS/g" $EXEC_MOD 
+sed "s|__script__|$CHECK_GROUP_SCRIPT|g" "$TEMP_FILE" > "$EXEC_MOD"
+sed -i "s/__groups__/$ALLOW_GROUPS/g" "$EXEC_MOD"
 
 
 # Creating a temporary file
@@ -743,38 +743,38 @@ echo "Configuration updated."
 
 # Setting access rights to configuration files
 
-chmod 440 $CONFIG_FILE_REST $CONFIG_FILE_PAM $CONFIG_FILE_SITE $CHECK_GROUP_SCRIPT
-chown freerad:freerad $CONFIG_FILE_REST $CONFIG_FILE_PAM $CONFIG_FILE_SITE $CHECK_GROUP_SCRIPT
+chmod 440 "$CONFIG_FILE_REST" "$CONFIG_FILE_PAM" "$CONFIG_FILE_SITE" "$CHECK_GROUP_SCRIPT"
+chown freerad:freerad "$CONFIG_FILE_REST" "$CONFIG_FILE_PAM" "$CONFIG_FILE_SITE" "$CHECK_GROUP_SCRIPT"
 
-chmod +x $CHECK_GROUP_SCRIPT
-ln -s $CONFIG_FILE_REST ${ROOT_DIR}mods-enabled/rest
-ln -s $CONFIG_FILE_PAM ${ROOT_DIR}mods-enabled/pam 
-ln -s $CONFIG_FILE_SITE ${ROOT_DIR}sites-enabled/$RADIUS_SITE_NAME
+chmod +x "$CHECK_GROUP_SCRIPT"
+ln -s "$CONFIG_FILE_REST" "${ROOT_DIR}mods-enabled/rest"
+ln -s "$CONFIG_FILE_PAM" "${ROOT_DIR}mods-enabled/pam" 
+ln -s "$CONFIG_FILE_SITE" "${ROOT_DIR}sites-enabled/$RADIUS_SITE_NAME"
 
 if whiptail --yesno "Output the resulting configs to the console?" 10 60; then
     # If the user selected "Yes", output the contents of the configuration files
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/sssd/sssd.conf:\033[0m \n"
-    cat /etc/sssd/sssd.conf
+    echo -e "\033[34mContent $SSSD_CONF:\033[0m \n"
+    cat "$SSSD_CONF"
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/krb5.conf:\033[0m \n"
-    cat /etc/krb5.conf
+    echo -e "\033[34mContent $CONFIG_FILE_KRB5:\033[0m \n"
+    cat $CONFIG_FILE_KRB5
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/freeradius/3.0/radiusd.conf,\033[0m"
+    echo -e "\033[34mContent $CONFIG_FILE_RADIUS,\033[0m"
     echo -e "\033[34mOutput only the modified lines because the file is very large:\033[0m \n"
-    grep -E "start_servers =|max_servers =|max_spare_servers =|min_spare_servers =" /etc/freeradius/3.0/radiusd.conf
+    grep -E "start_servers =|max_servers =|max_spare_servers =|min_spare_servers =" "$CONFIG_FILE_RADIUS"
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/freeradius/3.0/clients.conf:\033[0m \n"
-    cat /etc/freeradius/3.0/clients.conf
+    echo -e "\033[34mContent $CONFIG_FILE_CLIENT:\033[0m \n"
+    cat "$CONFIG_FILE_CLIENT"
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/freeradius/3.0/mods-enabled/rest:\033[0m \n"
-    cat /etc/freeradius/3.0/mods-enabled/rest
+    echo -e "\033[34mContent $CONFIG_FILE_REST:\033[0m \n"
+    cat "$CONFIG_FILE_REST"
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/freeradius/3.0/mods-enabled/pam:\033[0m\n"
-    cat /etc/freeradius/3.0/mods-enabled/pam
+    echo -e "\033[34mContent $CONFIG_FILE_PAM:\033[0m\n"
+    cat "$CONFIG_FILE_PAM"
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
-    echo -e "\033[34mContent /etc/freeradius/3.0/sites-available/$RADIUS_SITE_NAME:\033[0m \n"
-    cat /etc/freeradius/3.0/sites-available/$RADIUS_SITE_NAME
+    echo -e "\033[34mContent ${ROOT_DIR}sites-available/$RADIUS_SITE_NAME:\033[0m \n"
+    cat "${ROOT_DIR}sites-available/$RADIUS_SITE_NAME"
     printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
     read -n 1 -s -r -p "Press any key to continue..."
     echo ""

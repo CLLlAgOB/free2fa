@@ -131,3 +131,21 @@ freeradius -Xx
 You will need to change the admin password at the first login.
 
 ![screenshot](img/1-2.png)
+
+
+### Change History:
+
+**13.02.2024**
+
+In the database, user logins are always stored in ``"domain\username"`` format, regardless of which format the user entered their credentials in.  
+This means that even if a user uses different ways to enter their login credentials, such as:
+
+- `"domain\username"`.
+- `"domain.local\username"`.
+- `"username@domain.local"`
+- `"username@domain"`
+- `"username"` (in the case when short names are allowed without specifying the domain),
+
+will be written to the database uniformly as `"domain\username"`. This rule works the same for all cases, ensuring consistency of data in the database.  
+
+Added control.sh script that provides the ability to configure multiple configurations on a single server.

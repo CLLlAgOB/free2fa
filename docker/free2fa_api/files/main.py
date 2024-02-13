@@ -201,7 +201,7 @@ async def authenticate_user(request: AuthenticateRequest):
     telegram_id, is_bypass = await find_user_by_domain(normalized_username)
     logger.debug("app.post authenticate  Found Telegram ID: %s", telegram_id)
 
-    if telegram_id and telegram_id != 0:
+    if telegram_id and telegram_id != 0 and not is_bypass:
         wait_time = 1  # Waiting time
         # Waiting for a change of state or reaching the maximum waiting time
         max_wait_time = Config.FREE2FA_TIMEOUT

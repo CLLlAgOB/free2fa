@@ -407,9 +407,9 @@ server __default__ {
             }
         }
         elsif (&User-Name =~ /^[A-Za-z0-9\.\-_]+$/) {
-            if ("__shortname__" == "True") {
+            if ("__shortname__" == "False") {
                 update request {
-                    User-Name := "domain.local\\\\%{tolower:%{User-Name}}"
+                    User-Name := "__domain__\\\\%{tolower:%{User-Name}}"
                 }
             }
         }
@@ -456,10 +456,10 @@ server __default__ {
 }
 EOF
 
-
+shortdomain="${$DOMAIN%%.*}"
 sed "s/__default__/$RADIUS_SITE_NAME/g" $TEMP_FILE > $CONFIG_FILE_SITE
 sed -i "s/__port__/$RADIUS_PORT_NUMBER/g" $CONFIG_FILE_SITE
-sed -i "s/__domain__/$DOMAIN/g" $CONFIG_FILE_SITE
+sed -i "s/__domain__/$shortdomain/g" $CONFIG_FILE_SITE
 sed -i "s/__shortname__/$USE_FULLY_QUALIFIED_NAMES/g" $CONFIG_FILE_SITE
 
 # Deleting the temporary file
@@ -499,14 +499,6 @@ LOG_FILE="/var/log/freeradius/group_check.log"
 
 # Write the obtained parameters to a log file for debugging
 echo "Received parameters: USERNAME=$USERNAME, GROUPS_STRING=$GROUPS_STRING" >> "$LOG_FILE"
-
-# Check the USERNAME format against the expected format
-# Assume that valid usernames contain only letters, numbers, hyphens, periods and underscores
-if ! [[ "$USERNAME" =~ ^[a-zA-Z0-9\.\-_\\]+$ ]]; then
-    echo "Invalid username format" >> "$LOG_FILE"
-    #echo "Reply-Message = \"Invalid username format\""
-    exit 1
-fi
 
 # Convert the username to work correctly with the id command
 username_sanitized=$(echo "$USERNAME" | sed 's|\\\\|\\|g')

@@ -180,7 +180,8 @@ else
 fi
 
 # Asking which groups are allowed to log in
-ALLOW_GROUPS=$(whiptail --inputbox "Enter the groups allowed to authorize, separated by commas (e.g., vpn@domain.local,vpn2@domain.local)" 20 60 3>&1 1>&2 2>&3)
+ALLOW_GROUPS=$(whiptail --inputbox "Enter the groups that are allowed to authorize, separated by commas (for example, vpn@domain.local,vpn2@domain.local). \n
+Attention if you use short names, you should specify groups without domain. ( e.g. vpn,vpn2 ) " 20 60 3>&1 1>&2 2>&3)
 
 check_if_cancel
 
@@ -392,7 +393,7 @@ server __default__ {
     }
     authorize {
         if (&User-Name =~ /(.+)@([^\.]+)\./) {
-             update request {
+            update request {
                 Tmp-String-0 := "%{tolower:%{1}}"
                 Tmp-String-1 := "%{tolower:%{2}}"
                 User-Name := "%{Tmp-String-1}\\\\%{Tmp-String-0}"
@@ -405,9 +406,11 @@ server __default__ {
                 User-Name := "%{Tmp-String-0}\\\\%{Tmp-String-1}"
             }
         }
-        elsif (&User-Name =~ /^[A-Za-zА\.]+$/) {
-            update request {
-                User-Name := "__domain__\\\\%{tolower:%{User-Name}}"
+        elsif (&User-Name =~ /^[A-Za-z0-9\.\-_]+$/) {
+            if ("__shortname__" == "True") {
+                update request {
+                    User-Name := "domain.local\\\\%{tolower:%{User-Name}}"
+                }
             }
         }
         elsif (&User-Name =~ /^[A-Za-z\.]+\\\\[A-Za-z]+$/) {
@@ -457,7 +460,7 @@ EOF
 sed "s/__default__/$RADIUS_SITE_NAME/g" $TEMP_FILE > $CONFIG_FILE_SITE
 sed -i "s/__port__/$RADIUS_PORT_NUMBER/g" $CONFIG_FILE_SITE
 sed -i "s/__domain__/$DOMAIN/g" $CONFIG_FILE_SITE
-
+sed -i "s/__shortname__/$USE_FULLY_QUALIFIED_NAMES/g" $CONFIG_FILE_SITE
 
 # Deleting the temporary file
 rm "$TEMP_FILE"

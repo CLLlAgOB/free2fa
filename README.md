@@ -18,11 +18,14 @@ Free2FA - This is a free solution that allows you to enable two-factor authentic
 ## Main Components
 
 - **Free2FA**: Handles authentication requests using Telegram bot.
-- **FreeRADIUS**: The free2fa system uses FreeRADIUS to verify the user's login and password. If the verification is successful, the authentication process proceeds to the next step, the second security factor, which is handled by free2FA(In free2FA we do not pass the user's passwords only the login). FreeRADIUS is a free software. 
-and is distributed under [GNU General Public License version 3 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.en.html).
-The official website for FreeRADIUS is: [https://freeradius.org/](https://freeradius.org/)
-We use FreeRADIUS with no changes to the source code, only with configuration tweaks to meet the requirements of our project.
-This component includes a FreeRADIUS server that processes RADIUS requests from the client and passes them to free2fa_api for processing the second factor of the authentication.
+- **FreeRADIUS**: The free2fa system uses FreeRADIUS to verify the user's login and password. If the verification is successful, the authentication process proceeds to the next step, the second security factor, which is handled by free2FA(In free2FA we do not pass the user's passwords only the login). This component includes a FreeRADIUS server that processes RADIUS requests from the client and passes them to free2fa_api for processing the second factor of the authentication.
+- **SSSD**: (System Security Services Daemon) To integrate with an AD domain.
+
+FreeRADIUS and SSSD is a free software, and is distributed under [GNU General Public License version 3 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.en.html).  
+The official website for FreeRADIUS is: [https://freeradius.org/](https://freeradius.org/)  
+The official website for SSSD is: [https://sssd.io/](https://sssd.io/)  
+We use FreeRADIUS and SSSD with no changes to the source code, only with configuration tweaks to meet the requirements of our project.
+
 
 ## Free2FA Microservices
 
@@ -40,18 +43,19 @@ API service for the administrative interface that provides interaction between t
 ### 4. free2fa_api
 The main API service that handles authentication requests and interacts with the Telegram bot to confirm user logins.
 
+### Domain Integration.
 
-Each of these services runs in its own Docker container, providing modularity and making the system easy to scale. 
+SSSD (System Security Services Daemon) is used to integrate the Linux machine into the domain and manage credentials, which is in line with modern security requirements. SSSD provides support for authentication via Kerberos, which is the standard for secure credential exchange on networked systems. Using Kerberos in conjunction with SSSD ensures reliable and secure handling of user accounts in the domain, providing centralized access control and authentication.ию
 
 ### Compatibility and installation requirements
 
-The installation instructions have been successfully tested on Ubuntu Server 22.04 LTS operating system.
+The installation script was successfully tested on Ubuntu Server 22.04 LTS operating system.
 
 **Installation description:**
 
 1. Free2FA and its components are distributed as Docker containers. Only control ports are opened for external access on the host: 443 for Admin and 5000 for API, both are secured using SSL encryption.
 
-2. FreeRADIUS installation is performed directly on the host machine using a script in automatic mode. 
+2. FreeRADIUS and SSSD are installed automatically on the host machine via a script, and the other components are installed in the Docker container automatically.
 
 #### Authentication system workflow using the Cisco AnyConnect VPN server as an example
 

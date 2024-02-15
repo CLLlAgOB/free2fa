@@ -40,7 +40,6 @@ dp = Dispatcher()
 dp.include_router(router)
 
 # Other dictionaries
-search_state = {}
 auth_requests = {}
 last_message_info = {}
 
@@ -180,7 +179,7 @@ async def create_new_user(domain_and_username, telegram_id, is_bypass=False):
 @app.post("/authenticate")
 async def authenticate_user(request: AuthenticateRequest):
     """Authenticate, waiting for a response."""
-    # Checking API KEY
+    # Проверка API ключа
     client_key = request.client_key
     key_status = ClientKeyStorage.verify_and_set_key(client_key)
 
@@ -189,10 +188,8 @@ async def authenticate_user(request: AuthenticateRequest):
     if key_status == "set" and request.user_name == "key":
         return response_200()
 
-    if request.user_name != "":
-        normalized_username = request.user_name.lower()
-    else:
-        # user_name отсутствует
+    if request.user_name == "":
+        # user_name is missing
         return response_404()
 
     normalized_username = request.user_name.lower()
@@ -202,42 +199,69 @@ async def authenticate_user(request: AuthenticateRequest):
     logger.debug("app.post authenticate  Found Telegram ID: %s", telegram_id)
 
     if telegram_id and telegram_id != 0 and not is_bypass:
-        wait_time = 1  # Waiting time
-        # Waiting for a change of state or reaching the maximum waiting time
-        max_wait_time = Config.FREE2FA_TIMEOUT
-        await send_auth_request(telegram_id, normalized_username)
-        while wait_time <= max_wait_time and auth_requests.get(normalized_username) is None:
-            logger.debug("Waiting for a response for %s"
-                         "seconds %d from %d", normalized_username, wait_time, max_wait_time)
-            await asyncio.sleep(1)
-            wait_time += 1
-        # Checking the status of the request after waiting
-        if normalized_username in auth_requests:
-            if auth_requests[normalized_username]:
-                logger.info(
-                    "Authentication request accepted by user %s", normalized_username)
-                asyncio.create_task(clear_auth_request(normalized_username))
-                return response_200()
-            logger.info("Authentication request rejected by user %s",
-                        normalized_username)
-            asyncio.create_task(clear_auth_request(normalized_username))
-            return response_403()
-        logger.info("Authentication request timeout for user: %s",
+        return await handle_auth_with_wait(normalized_username, telegram_id)
+    else:
+        return await handle_auto_reg_or_bypass(normalized_username, telegram_id, is_bypass)
+
+
+async def handle_auth_with_wait(normalized_username, telegram_id):
+    """
+    Waits for user authentication confirmation. Sends an authentication request
+    and waits for a response for the specified time. Returns the appropriate HTTP response
+    depending on the authentication result.
+
+    :param normalized_username: Normalized username.
+    :param telegram_id: User ID in Telegram.
+    :return: HTTPResponse depending on the authentication result.
+    """
+    wait_time = 1  # Initial waiting time
+    max_wait_time = Config.FREE2FA_TIMEOUT
+    await send_auth_request(telegram_id, normalized_username)
+
+    while wait_time <= max_wait_time and normalized_username not in auth_requests:
+        logger.debug("Waiting for a response for %s seconds %.1f from %d",
+                     normalized_username, wait_time, max_wait_time)
+        await asyncio.sleep(0.5)
+        wait_time += 0.5
+
+    if auth_requests.get(normalized_username):
+        logger.info("Authentication request accepted by user %s",
                     normalized_username)
         asyncio.create_task(clear_auth_request(normalized_username))
-        return response_408()
-    if Config.AUTO_REG_ENABLED:
-        logger.debug("Auto registration user: %s", normalized_username)
-        await create_new_user(normalized_username, 0)
-        telegram_id = 0
-    if (Config.BYPASS_ENABLED and telegram_id == 0) or is_bypass:
+        return response_200()
+    else:
+        logger.info(
+            "Authentication request rejected or timeout for user: %s", normalized_username)
+        asyncio.create_task(clear_auth_request(normalized_username))
+        return response_403() if normalized_username in auth_requests else response_408()
+
+
+async def handle_auto_reg_or_bypass(normalized_username, telegram_id, is_bypass):
+    """
+    Handles auto-registration or authentication bypass for a user.
+    Depending on configuration conditions and user status, performs auto-registration
+    or allows authentication bypass, returning the appropriate HTTP response.
+
+    :param normalized_username: Normalized username.
+    :param telegram_id: User ID in Telegram.
+    :param is_bypass: Flag indicating whether authentication bypass is required.
+    :return: HTTPResponse depending on user actions.
+    """
+    auto_reg_condition = Config.AUTO_REG_ENABLED and telegram_id is None
+    bypass_condition = is_bypass or (
+        Config.BYPASS_ENABLED and telegram_id == 0)
+
+    if auto_reg_condition or bypass_condition:
+        if auto_reg_condition:
+            logger.debug("Auto registration user: %s", normalized_username)
+            await create_new_user(normalized_username, 0)
+
         logger.info("Authentication request bypassed by user %s",
                     normalized_username)
         return response_200()
     else:
         logger.warning("User not found")
         return response_404()
-    return response_404()
 
 
 # ==========BOT================

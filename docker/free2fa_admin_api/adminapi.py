@@ -123,22 +123,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Model for user data
 
-
-class UserUpdate(BaseModel):
-    """
-    Pydantic model for updating user data.
-
-    Attributes:
-        domain_and_username (str): The user's unique domain username.
-        telegram_id (int): The user's Telegram identifier.
-        is_bypass (bool): Flag indicating whether there are special rules to let in without request.
-        The default value is False.
-    """
-    domain_and_username: str
-    telegram_id: int
-    is_bypass: bool
-
-
 DATABASE_PATH = '/opt/db/users.db'
 
 
@@ -423,7 +407,7 @@ async def verify_token(_: User = Depends(get_current_user)):
 
 
 @app.put("/users/{username}")
-async def update_user(username: str, user_update: UserUpdate = Body(...),
+async def update_user(username: str, user_update: User = Body(...),
                       _: User = Depends(get_current_user)):
     """
     Updates the specified user's information in the database.
@@ -433,7 +417,7 @@ async def update_user(username: str, user_update: UserUpdate = Body(...),
 
     Args:
         username (str): The username of the user to be updated.
-        user_update (UserUpdate): Object containing the updated data.
+        user_update (User): Object containing the updated data.
         _ (User): The authenticated user, verified by the JWT token.
 
     Raises:

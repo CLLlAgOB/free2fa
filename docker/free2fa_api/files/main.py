@@ -20,6 +20,7 @@ from aiogram.dispatcher.router import Router
 from aiogram.filters import Command
 from aiogram import exceptions as aiogram_exceptions
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.client.session.aiohttp import AiohttpSession
 from config import Config
 
 
@@ -35,7 +36,7 @@ router = Router()
 
 # FastAPI and aiogram initialization
 app = FastAPI()
-bot = Bot(token=Config.TOKEN)
+bot = Bot(token=Config.TOKEN, session=AiohttpSession(timeout=3))
 dp = Dispatcher()
 dp.include_router(router)
 
@@ -417,12 +418,18 @@ async def delete_limited_message(chat_id, message_id):
 
 async def start_aiogram():
     """Bot launch function"""
-    try:
-        await dp.start_polling(bot)
-    except aiogram_exceptions.TelegramNetworkError as network_err:
-        logger.warning("Telegram network error: %s", network_err)
-    except aiogram_exceptions.AiogramError as other_err:
-        logger.error("Unhandled exception: %s", other_err)
+    while True:
+        try:
+            logger.info("Bot Launch...")
+            await dp.start_polling(bot)
+            logger.info("The bot has been successfully launched.")
+            break  # Exit the loop after a successful start
+        except aiogram_exceptions.TelegramNetworkError as network_err:
+            logger.warning(f"Telegram network error: {network_err}")
+        except aiogram_exceptions.AiogramError as other_err:
+            logger.error(f"Unhandled exception: {other_err}")
+        logger.warning("Retry in 5 seconds....")
+        await asyncio.sleep(5)  # Delay before the next attempt
 
 
 async def main():

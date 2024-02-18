@@ -153,3 +153,11 @@ This means that even if a user uses different ways to enter their login credenti
 will be written to the database uniformly as `"domain\username"`. This rule works the same for all cases, ensuring consistency of data in the database.  
 
 Added control.sh script that provides the ability to configure multiple configurations on a single server.
+
+**18.02.2024**
+
+An improvement was made to the application logic related to the lack of connection to the Telegram API.  
+Now, if the application fails to connect to Telegram API at startup, the system can continue to work in bypass mode,  
+provided the ALLOW_API_FAILURE_PASS option is enabled. This means that the bot will be automatically launched as soon as the connection to the API is restored.  
+If the connection is lost again after the bot is started, the workaround mechanism will be triggered, provided that it is enabled. In addition, for users  
+who have the Bypass checkbox checked in the control panel, the bypass mode will be activated permanently regardless of the ALLOW_API_FAILURE_PASS setting.

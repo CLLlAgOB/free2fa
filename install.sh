@@ -348,7 +348,7 @@ prompt_env_configuration() {
 
 # Download docker-compose.yml
 download_docker_compose_yml() {
-    curl -L "https://raw.githubusercontent.com/CLLlAgOB/free2fa/main/docker-compouse/docker-compose.yml" -o docker-compose.yml
+    curl -L "https://raw.githubusercontent.com/CLLlAgOB/free2fa/main/docker-compose/docker-compose.yml" -o docker-compose.yml
     echo "docker-compose.yml downloaded."
 }
 

@@ -9,622 +9,108 @@ the Free Software Foundation, either version 3 of the License, or
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>User Management</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
 
-  <body>
-    <div id="notification" class="notification-container"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Management</title>
+  <link rel="stylesheet" href="./static/styles.css" />
+</head>
 
-    <div id="loginSection">
-      <h2>Login</h2>
-      <form id="loginForm">
-        <input type="text" id="loginUsername" placeholder="username" required />
-        <input
-          type="password"
-          id="loginPassword"
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-      <!-- Password Reset Button -->
-      <div id="resetPasswordButtonDiv" style="display: none">
-        <button id="resetPasswordButton">Reset Password</button>
-      </div>
-      <div id="resetPasswordSection" style="display: none">
-        <h2>Reset Password</h2>
-        <form id="resetPasswordForm">
-          <input
-            type="text"
-            id="encryptionKey"
-            placeholder="Encryption Key"
-            required
-          />
-          <button type="submit">Submit</button>
-        </form>
-      </div>
+<body>
+  <div id="notification" class="notification-container"></div>
+
+  <div id="loginSection">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="text" id="loginUsername" placeholder="username" required />
+      <input type="password" id="loginPassword" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+    <!-- Password Reset Button -->
+    <div id="resetPasswordButtonDiv">
+      <button id="resetPasswordButton">Reset Password</button>
     </div>
-    <!-- Password Change Form -->
-    <div id="changePasswordSection" style="display: none">
-      <h2>Change Password</h2>
-      <form id="changePasswordForm">
-        <input
-          type="password"
-          id="changePasswordOldPassword"
-          placeholder="Current Password"
-          required
-        />
-        <input
-          type="password"
-          id="newPassword"
-          placeholder="New Password"
-          required
-        />
-        <input
-          type="password"
-          id="confirmNewPassword"
-          placeholder="Confirm New Password"
-          required
-        />
-        <span id="passwordMismatch" style="color: red; display: none"
-          >Passwords do not match</span
-        >
-        <button type="submit">Change Password</button>
+    <div id="resetPasswordSection">
+      <h2>Reset Password</h2>
+      <form id="resetPasswordForm">
+        <input type="text" id="encryptionKey" placeholder="Encryption Key" required />
+        <button type="submit">Submit</button>
       </form>
     </div>
+  </div>
+  <!-- Password Change Form -->
+  <div id="changePasswordSection">
+    <h2>Change Password</h2>
+    <form id="changePasswordForm">
+      <input type="password" id="changePasswordOldPassword" placeholder="Current Password" required />
+      <input type="password" id="newPassword" placeholder="New Password" required />
+      <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required />
+      <span id="passwordMismatch">Passwords do not match</span>
+      <button type="submit">Change Password</button>
+    </form>
+  </div>
 
-    <div id="mainContent" style="display: none">
-      <h2>Add User</h2>
-      <form id="addUserForm">
-        <input type="text" id="username" placeholder="domain\username" required />
-        <input
-          type="number"
-          id="telegramId"
-          placeholder="Telegram ID"
-          required
-        />
-        <input type="checkbox" id="isBypass" /> Is Bypass
-        <button type="submit">Add User</button>
-      </form>
+  <div id="mainContent">
+    <h2>Add User</h2>
+    <form id="addUserForm">
+      <input type="text" id="username" placeholder="domain\username" required />
+      <input type="number" id="telegramId" placeholder="Telegram ID" required />
+      <input type="checkbox" id="isBypass" /> Is Bypass
+      <button type="submit">Add User</button>
+    </form>
 
-      <h2>Users</h2>
-      <button id="loadUsers">Load Users</button>
-      <div id="usersTableContainer">
-        <table id="usersTable">
-          <caption>User Table</caption>
-          <thead>
-            <tr>
-              <th>User Name</th>
-              <th>Telegram ID</th>
-              <th>Bypass</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Rows with user data -->
-          </tbody>
-        </table>
-      </div>
-      <h2>Search User</h2>
-      <form id="searchUserForm">
-        <input
-          type="text"
-          id="searchUsername"
-          placeholder="domain\username to search"
-          required
-        />
-        <button type="submit">Search</button>
-      </form>
-
-      <div id="usersList">
-        <!-- Search results -->
-      </div>
-
-      <h2>Edit User</h2>
-      <div id="editUserSection" style="display: none">
-        <form id="editUserForm">
-          <input type="hidden" id="editUsernameOriginal" />
-          <input type="text" id="editUsername" placeholder="domain\username" />
-          <input
-            type="number"
-            id="editTelegramId"
-            placeholder="New Telegram ID"
-          />
-          <input type="checkbox" id="editisBypass" /> Is Bypass
-          <button type="submit">Update User</button>
-        </form>
-        <input type="hidden" id="originalUsername" />
-      </div>
-      <div id="logoutButtonDiv">
-        <button id="logoutButton" style="display: none">Logout</button>
-      </div>
-      <div
-        id="changePasswordButtonContainer"
-        class="change-password-button-container"
-      >
-        <button id="changePasswordButton">Change Admin Password</button>
-      </div>
-      <div id="downloadCA">
-        <a href="/certs/ca.crt" download class="padded-link"
-          >Download CA Certificate</a
-        >
-      </div>
+    <h2>Users</h2>
+    <button id="loadUsers">Load Users</button>
+    <div id="usersTableContainer">
+      <table id="usersTable">
+        <caption>User Table</caption>
+        <thead>
+          <tr>
+            <th>User Name</th>
+            <th>Telegram ID</th>
+            <th>Bypass</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows with user data -->
+        </tbody>
+      </table>
     </div>
-    <script>
-      const API_BASE_URL = window.location.origin;
+    <h2>Search User</h2>
+    <form id="searchUserForm">
+      <input type="text" id="searchUsername" placeholder="domain\username to search" required />
+      <button type="submit">Search</button>
+    </form>
 
-      document
-        .getElementById("logoutButton")
-        .addEventListener("click", function () {
-          // Deleting a token from sessionStorage
-          sessionStorage.removeItem("token");
+    <div id="usersList">
+      <!-- Search results -->
+    </div>
 
-          // Switching the display of sections
-          document.getElementById("loginSection").style.display = "block";
-          document.getElementById("mainContent").style.display = "none";
-          document.getElementById("changePasswordSection").style.display =
-            "none";
-        });
+    <h2>Edit User</h2>
+    <div id="editUserSection">
+      <form id="editUserForm">
+        <input type="hidden" id="editUsernameOriginal" />
+        <input type="text" id="editUsername" placeholder="domain\username" />
+        <input type="number" id="editTelegramId" placeholder="New Telegram ID" />
+        <input type="checkbox" id="editisBypass" /> Is Bypass
+        <button type="submit">Update User</button>
+      </form>
+      <input type="hidden" id="originalUsername" />
+    </div>
+    <div id="logoutButtonDiv">
+      <button id="logoutButton">Logout</button>
+    </div>
+    <div id="changePasswordButtonContainer" class="change-password-button-container">
+      <button id="changePasswordButton">Change Admin Password</button>
+    </div>
+    <div id="downloadCA">
+      <a href="/certs/ca.crt" download class="padded-link">Download CA Certificate</a>
+    </div>
+  </div>
+  <script src="./static/control.js"></script>
+</body>
 
-      function validateUsernameFormat(username) {
-        const regex = /^[^\s\\]+\\[^\s\\]+$/;
-        return regex.test(username);
-      }
-      
-      function showNotification(message, type = "success") {
-        const notification = document.getElementById("notification");
-        notification.textContent = message;
-        notification.style.display = "block";
-
-        // Delete previous classes, if any
-        notification.classList.remove(
-          "notification-success",
-          "notification-error",
-        );
-
-        // Add the appropriate class depending on the type of notification
-        if (type === "success") {
-          notification.classList.add("notification-success");
-        } else {
-          notification.classList.add("notification-error");
-        }
-
-        setTimeout(() => {
-          notification.style.display = "none";
-        }, 3000);
-      }
-
-      function doubleBackslashes(str) {
-        return str.replace(/\\/g, "\\\\");
-      }
-
-      document
-        .getElementById("changePasswordForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
-
-          const oldPassword = document.getElementById(
-            "changePasswordOldPassword",
-          ).value;
-          const newPassword = document.getElementById("newPassword").value;
-          const confirmNewPassword =
-            document.getElementById("confirmNewPassword").value;
-
-          // Password match check
-          if (newPassword !== confirmNewPassword) {
-            // If the passwords do not match, we show an error message
-            document.getElementById("passwordMismatch").style.display = "block";
-            return;
-          } else {
-            document.getElementById("passwordMismatch").style.display = "none";
-          }
-
-          changePassword(oldPassword, newPassword);
-        });
-
-      document
-        .getElementById("changePasswordButton")
-        .addEventListener("click", function () {
-          document.getElementById("changePasswordSection").style.display =
-            "block";
-        });
-
-      async function changePassword(oldPassword, newPassword) {
-        const token = sessionStorage.getItem("token");
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/change-password`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              old_password: oldPassword,
-              new_password: newPassword,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(
-              `Failed to change password: ${response.statusText}`,
-            );
-          }
-
-          showNotification("Password changed successfully", "success");
-          document.getElementById("changePasswordSection").style.display =
-            "none";
-          location.reload();
-        } catch (error) {
-          console.error("Error changing password:", error);
-          showNotification("Failed to change password", "error");
-        }
-      }
-
-      document
-        .getElementById("addUserForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const username = document.getElementById("username").value;
-          if (!validateUsernameFormat(username)) {
-            alert("Username must be in the format domain\\user.");
-            return;
-          }
-          const telegramId = document.getElementById("telegramId").value;
-          const isBypass = document.getElementById("isBypass").checked;
-
-          const response = await fetch(`${API_BASE_URL}/api/users/`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({
-              domain_and_username: username,
-              telegram_id: telegramId,
-              is_bypass: isBypass,
-            }),
-          });
-
-          const data = await response.json();
-          if (response.ok) {
-            showNotification(data.message, "success");
-          } else {
-            showNotification(data.message, "error");
-          }
-
-          document.getElementById("addUserForm").reset();
-          loadUsers();
-        });
-
-      document.getElementById("loadUsers").addEventListener("click", loadUsers);
-
-      async function loadUsers() {
-        const token = sessionStorage.getItem("token");
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/users/`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (!response.ok) {
-            // Handle an error if the request fails
-            throw new Error(`Error fetching users: ${response.statusText}`);
-          }
-
-          const users = await response.json();
-          const usersTableBody = document.querySelector("#usersTable tbody");
-          usersTableBody.innerHTML = "";
-
-          users.forEach((user) => {
-            const tr = document.createElement("tr");
-            const escapedUsernameForOnClick = doubleBackslashes(user[0]);
-            tr.innerHTML = `
-                    <td>${user[0]}</td>
-                    <td>${user[1]}</td>
-                    <td>${user[2] ? "Yes" : "No"}</td>
-                    <td>
-                        <button onclick="showEditForm(['${escapedUsernameForOnClick}', ${user[1]}, ${user[2]}])">Edit</button>
-                        <button onclick="deleteUser('${escapedUsernameForOnClick}')">Delete</button>
-                    </td>
-                `;
-            usersTableBody.appendChild(tr);
-          });
-        } catch (error) {
-          console.error("Error loading users:", error);
-          showNotification(error.message, "error");
-        }
-      }
-
-      async function deleteUser(username) {
-        const token = sessionStorage.getItem("token");
-        try {
-          const fixedUsername = encodeURIComponent(username);
-          const response = await fetch(
-            `${API_BASE_URL}/api/users/${fixedUsername}`,
-            {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-
-          if (!response.ok) {
-            throw new Error(`Error deleting user: ${response.statusText}`);
-          }
-
-          showNotification("User deleted successfully", "success");
-          loadUsers();
-        } catch (error) {
-          console.error("Error deleting user:", error);
-          showNotification("Error deleting user", "error");
-        }
-      }
-
-      function showEditForm(user) {
-        document.getElementById("editUserSection").style.display = "block";
-        document.getElementById("originalUsername").value = user[0];
-        document.getElementById("editUsernameOriginal").value = user[0];
-        document.getElementById("editUsername").value = user[0];
-        document.getElementById("editTelegramId").value = user[1];
-        document.getElementById("editisBypass").checked = user[2];
-      }
-
-      document
-        .getElementById("editUserForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          try {
-            const originalUsername = encodeURIComponent(
-              document.getElementById("originalUsername").value,
-            );
-            const newUsername = document.getElementById("editUsername").value;
-            if (!validateUsernameFormat(newUsername)) {
-              alert("Username must be in the format domain\\user.");
-              return;
-            }
-            const newTelegramId =
-              document.getElementById("editTelegramId").value;
-            const newisBypass = document.getElementById("editisBypass").checked;
-
-            const requestBody = {
-              domain_and_username: newUsername,
-              telegram_id: newTelegramId,
-              is_bypass: newisBypass,
-            };
-
-            // Output serialized JSON to the console before sending it
-            console.log(
-              "Sending PUT request with data:",
-              JSON.stringify(requestBody),
-            );
-            const token = sessionStorage.getItem("token");
-            const response = await fetch(
-              `${API_BASE_URL}/api/users/${originalUsername}`,
-              {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(requestBody),
-              },
-            );
-
-            const data = await response.json();
-            if (response.ok) {
-              showNotification(data.message, "success");
-            } else {
-              showNotification(data.message, "error");
-            }
-            document.getElementById("editUserForm").reset();
-            loadUsers();
-          } catch (error) {
-            console.error("Error updating user:", error);
-          }
-        });
-
-      // Adding a handler for user search form
-      document
-        .getElementById("searchUserForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const searchUsername = encodeURIComponent(
-            document.getElementById("searchUsername").value,
-          );
-          const token = sessionStorage.getItem("token");
-          try {
-            const response = await fetch(
-              `${API_BASE_URL}/api/users/${searchUsername}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              },
-            );
-
-            if (!response.ok) {
-              throw new Error("User not found or server error");
-            }
-
-            const user = await response.json();
-
-            if (user) {
-              const usersList = document.getElementById("usersList");
-              usersList.innerHTML = "";
-
-              const li = document.createElement("li");
-              li.textContent = `${user.domain_and_username}, Telegram ID: ${user.telegram_id}, Bypass user: ${user.is_bypass}`;
-
-              const deleteButton = document.createElement("button");
-              deleteButton.textContent = "Delete";
-              deleteButton.onclick = function () {
-                deleteUser(user.domain_and_username)
-                  .then(() => {
-                    loadUsers();
-                  })
-                  .catch((error) => {
-                    console.error("Error deleting user:", error);
-                    showNotification("Error deleting user", "error");
-                  });
-              };
-
-              const editButton = document.createElement("button");
-              editButton.textContent = "Edit";
-              editButton.onclick = function () {
-                showEditForm([
-                  user.domain_and_username,
-                  user.telegram_id,
-                  user.is_bypass,
-                ]);
-              };
-
-              li.appendChild(editButton);
-              li.appendChild(deleteButton);
-              usersList.appendChild(li);
-            }
-          } catch (error) {
-            showNotification(error.message, "error");
-          }
-        });
-
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const username = document.getElementById("loginUsername").value;
-          const password = document.getElementById("loginPassword").value;
-
-          // Sending a request to the server for authentication
-          const response = await fetch(`${API_BASE_URL}/api/auth/admin`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              username: username,
-              password: password,
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            sessionStorage.setItem("token", data.access_token);
-            if (username === "admin" && password === "admin") {
-              document.getElementById("changePasswordSection").style.display =
-                "block";
-            } else {
-              document.getElementById("mainContent").style.display = "block";
-            }
-            document.getElementById("loginSection").style.display = "none";
-            document.getElementById("logoutButton").style.display = "block";
-          } else {
-            showNotification("Login failed!", "error");
-          }
-        });
-
-      document.addEventListener("DOMContentLoaded", async function () {
-        checkAuthentication();
-        checkResetPasswordEnabled();
-        setupResetPasswordButton();
-      });
-
-      async function checkResetPasswordEnabled() {
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}/api/reset-password-enabled`,
-          );
-          const data = await response.json();
-
-          if (data.resetPasswordEnabled) {
-            document.getElementById("resetPasswordButtonDiv").style.display =
-              "block";
-          }
-        } catch (error) {
-          console.error("Error checking reset password status:", error);
-        }
-      }
-
-      function setupResetPasswordButton() {
-        const resetPasswordButton = document.getElementById(
-          "resetPasswordButton",
-        );
-        if (resetPasswordButton) {
-          resetPasswordButton.addEventListener("click", function () {
-            document.getElementById("resetPasswordSection").style.display =
-              "block";
-          });
-        }
-      }
-
-      async function checkAuthentication() {
-        const token = sessionStorage.getItem("token");
-        if (token) {
-          try {
-            const response = await fetch(`${API_BASE_URL}/api/verify-token`, {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-
-            if (!response.ok) {
-              throw new Error("Token verification failed");
-            }
-
-            document.getElementById("loginSection").style.display = "none";
-            document.getElementById("mainContent").style.display = "block";
-            document.getElementById("logoutButton").style.display = "block";
-          } catch (error) {
-            console.error("Error verifying token:", error);
-            sessionStorage.removeItem("token");
-            redirectToLogin();
-          }
-        } else {
-          redirectToLogin();
-        }
-      }
-
-      function redirectToLogin() {
-        document.getElementById("loginSection").style.display = "block";
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("logoutButton").style.display = "none";
-      }
-
-      document
-        .getElementById("resetPasswordForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const encryptionKey = document.getElementById("encryptionKey").value;
-
-          try {
-            const response = await fetch(`${API_BASE_URL}/api/reset-password`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ secret_key: encryptionKey }),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-              showNotification(data.message, "success");
-            } else {
-              showNotification(data.message, "error");
-            }
-          } catch (error) {
-            console.error("Error resetting password:", error);
-            showNotification("Failed to reset password", "error");
-          }
-        });
-    </script>
-  </body>
 </html>

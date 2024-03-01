@@ -149,6 +149,7 @@ select:focus {
 }
 
 @media (max-width: 700px) {
+
   header li,
   .section form input[type="text"],
   .section form input[type="number"] {
@@ -256,14 +257,6 @@ input[type="checkbox"]:checked::after {
   border-bottom: 1px solid gray;
 }
 
-#usersTableContainer {
-  max-height: 400px;
-  overflow-y: auto;
-  border: 1px solid gray;
-  margin-bottom: 20px;
-  margin-top: 10px;
-}
-
 #resetPasswordSection,
 #loginSection,
 #changePasswordSection {
@@ -272,6 +265,10 @@ input[type="checkbox"]:checked::after {
   align-items: center;
   height: 100vh;
   text-align: center;
+}
+
+#passwordMismatch {
+  display: none;
 }
 
 .padded-link {
@@ -295,6 +292,19 @@ input[type="checkbox"]:checked::after {
   border: none;
 }
 
+.notification-container {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: #f44336;
+  color: white;
+  text-align: center;
+  border: 1px solid #ddd;
+  padding: 10px;
+  z-index: 1000;
+}
+
 .notification-success,
 .notification-error {
   background-color: #4caf50;
@@ -311,36 +321,6 @@ input[type="checkbox"]:checked::after {
 
 .notification-error {
   background-color: #f44336;
-}
-
-#usersTable {
-  width: auto;
-  max-width: 100%;
-  border-collapse: collapse;
-}
-
-#usersTable th,
-#usersTable td {
-  border: 1px solid #5a5a5a;
-  padding: 8px;
-  text-align: left;
-  color: #fff;
-}
-
-#usersTable th {
-  background-color: #6a6a6a;
-  color: #fff;
-}
-
-#usersTable th:nth-child(1),
-#usersTable td:nth-child(1) {
-  width: 200px;
-}
-
-#usersTable thead th {
-  top: 0;
-  background-color: #6a6a6a;
-  z-index: 10;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
@@ -376,4 +356,65 @@ input[type="number"] {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+#loginSection,
+#changePasswordSection,
+#mainContent {
+  margin: 20px;
+}
+
+#resetPasswordButtonDiv,
+#resetPasswordSection,
+#changePasswordSection,
+#mainContent,
+#editUserSection,
+#logoutButton,
+#changePasswordButtonContainer {
+  display: none;
+}
+
+.change-password-button-container {
+  margin-top: 20px;
+}
+
+.padded-link {
+  padding: 10px;
+}
+
+#usersTableContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid gray;
+  margin: 10px 0 20px;
+}
+
+#usersTable {
+  width: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+  border: 1px solid black;
+}
+
+#usersTable th,
+#usersTable td {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid #5a5a5a;
+  color: #fff; 
+}
+
+#usersTable th {
+  background-color: #6a6a6a;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+#usersTable td:nth-child(1) {
+  width: 200px;
 }

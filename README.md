@@ -55,6 +55,9 @@ and the server side of the system.
 The main API service that handles authentication requests and interacts with the Telegram bot to
 confirm user logins.
 
+### 5. free2fa_otp
+OTP Enrollment Portal.
+
 ### Domain Integration
 
 SSSD (System Security Services Daemon) is used to integrate the Linux machine into the domain and
@@ -175,7 +178,11 @@ Used for secure access to the admin area.
 You should write it in dns or hosts for easy access.
 - `RADIUS_CLIENT_IP`: IP radius of the client. It is highly recommended to
 specify from which IP to expect requests for authorization.
-
+- `ACCESS_TOKEN_EXPIRE_MINUTES`: Session session time in the administrator portal
+- `OTP_SEPARATOR`: separator between the user password and the OTP.
+- `MAX_LOGIN_ATTEMPTS`: maximum number of unsuccessful attempts to enter the portal.
+- `BLOCK_DURATION_MINUTES`: period of blocking entry attempts when the maximum is reached.
+- `OTP_FIRM_INFO`: information about the organization displayed in the OTP application.
 
 
 You will need to change the admin password at the first login.

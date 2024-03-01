@@ -16,7 +16,7 @@ import uvicorn
 
 import aiosqlite
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Body, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
@@ -407,8 +407,11 @@ async def verify_token(_: User = Depends(get_current_user)):
 
 
 @app.put("/users/{username}")
-async def update_user(username: str, user_update: User = Body(...),
-                      _: User = Depends(get_current_user)):
+async def update_user(
+    username: str,
+    user_update: Optional[User] = None,
+    _: User = Depends(get_current_user)
+):
     """
     Updates the specified user's information in the database.
 
@@ -427,6 +430,9 @@ async def update_user(username: str, user_update: User = Body(...),
     Returns:
         dict: A confirmation message upon successful update of the user.
     """
+    if user_update is None:  # Проверка на None
+        raise HTTPException(status_code=400, detail="User update data is required")
+
     username = username.lower()
     user_update.domain_and_username = user_update.domain_and_username.lower()
     logger.info("Updating user")

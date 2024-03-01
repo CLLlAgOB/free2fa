@@ -249,20 +249,20 @@ async def handle_auto_reg_or_bypass(normalized_username, telegram_id, is_bypass)
     :return: HTTPResponse depending on user actions.
     """
     auto_reg_condition = Config.AUTO_REG_ENABLED and telegram_id is None
-    bypass_condition = is_bypass or (
-        Config.BYPASS_ENABLED and telegram_id == 0)
-
-    if auto_reg_condition or bypass_condition:
-        if auto_reg_condition:
-            logger.debug("Auto registration user: %s", normalized_username)
-            await create_new_user(normalized_username, 0)
-
+    if auto_reg_condition:
+        logger.debug("Auto registration user: %s", normalized_username)
+        await create_new_user(normalized_username, 0)
+        telegram_id = 0
+    bypass_condition = is_bypass or (Config.BYPASS_ENABLED and telegram_id == 0)
+    if bypass_condition:
         logger.info("Authentication request bypassed by user %s",
                     normalized_username)
         return response_200()
+    if telegram_id is None:
+        logger.warning("User %s not found", normalized_username)
     else:
-        logger.warning("User not found")
-        return response_404()
+        logger.warning("2fa is not configured for user %s", normalized_username)
+    return response_403()
 
 
 # ==========BOT================

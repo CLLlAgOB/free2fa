@@ -254,3 +254,13 @@ of cross-site requests.
 
 These measures help provide a higher level of security for users, preventing potential threats
 and attacks.
+
+**03.03.2024**
+
+The "Free2FA" project offers two additional editions of the application designed to meet specific security needs. Both editions incorporate Telegram push notifications alongside other features:
+
+1. **Edition for RDG (Remote Desktop Gateway)**: This version is tailored for use in remote desktop access systems through RDG gateways. It adds an extra layer of security by integrating two-factor authentication with Telegram push notifications. GitHub repository: [Free2FA4RDG](https://github.com/CLLlAgOB/free2fa4rdg).
+
+2. **Edition with Portal and One-Time Passwords (OTP)**: This version combines portal-based authentication with one-time passwords and Telegram push notifications. It is aimed at organizations and individual users seeking a convenient and secure form of two-factor authentication. GitHub repository: [Free2FAPlus](https://github.com/CLLlAgOB/free2faplus).
+
+These editions expand the functionality of the base "Free2FAPlus" version, providing additional options for securing and managing access to digital resources.

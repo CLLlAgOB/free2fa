@@ -55,9 +55,6 @@ and the server side of the system.
 The main API service that handles authentication requests and interacts with the Telegram bot to
 confirm user logins.
 
-### 5. free2fa_otp
-OTP Enrollment Portal.
-
 ### Domain Integration
 
 SSSD (System Security Services Daemon) is used to integrate the Linux machine into the domain and

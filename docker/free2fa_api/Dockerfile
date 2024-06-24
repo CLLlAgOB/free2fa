@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:slim
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ COPY entrypoint.sh ./
 RUN chmod +x ./entrypoint.sh
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates=20230311 \
+    && apt-get install -y --no-install-recommends ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

@@ -1,6 +1,6 @@
-FROM alpine:3.19.1
+FROM alpine:latest
 
-RUN apk --no-cache add openssl=3.1.4-r5 curl=8.5.0-r0 bash=5.2.21-r0
+RUN apk --no-cache add openssl curl bash
 
 WORKDIR /certs
 

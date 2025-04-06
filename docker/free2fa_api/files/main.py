@@ -401,11 +401,14 @@ async def answer_limited_message(message, text):
     await MessageLimiter.wait_for_message_slot()
     return await message.answer(text)
 
-
 async def send_limited_edit_message(chat_id, message_id, reply_markup=None):
     """Method of message modification"""
     await MessageLimiter.wait_for_message_slot()
-    return await bot.edit_message_reply_markup(chat_id, message_id, reply_markup=reply_markup)
+    return await bot.edit_message_reply_markup(
+        chat_id=chat_id,
+        message_id=message_id,
+        reply_markup=reply_markup
+    )
 
 
 async def delete_limited_message(chat_id, message_id):

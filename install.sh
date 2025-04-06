@@ -93,33 +93,9 @@ check_and_install_docker() {
     fi
 }
 
-# Function to check and install Docker Compose
-check_and_install_docker_compose() {
-    if ! command -v docker-compose &>/dev/null; then
-        echo "Docker Compose was not found."
-        if whiptail --yesno "Do you want to install Docker Compose?" 8 78 --title "Installing Docker Compose"; then
-            echo "Installing Docker Compose..."
-            if [[ ":$PATH:" != *":/usr/local/bin:"* ]]; then
-                echo "Adding /usr/local/bin to your PATH"
-                export PATH=$PATH:/usr/local/bin
-                echo "export PATH=$PATH:/usr/local/bin" >>~/.bashrc
-            fi
-            curl -L "https://github.com/docker/compose/releases/download/v2.5.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            chmod +x /usr/local/bin/docker-compose
-            echo "Docker Compose has been installed."
-        else
-            echo "The installation of Docker Compose is skipped."
-        fi
-    else
-        echo "Docker Compose is already installed, skip the installation."
-    fi
-}
-
 # Check and install Docker without asking first
 check_and_install_docker
 
-# Check and install Docker Compose without asking first
-check_and_install_docker_compose
 
 # Creating a temporary file
 TEMP_FILE=$(mktemp)
@@ -293,6 +269,7 @@ FREE2FA_TELEGRAM_BOT_LANGUAGE=${FREE2FA_TELEGRAM_BOT_LANGUAGE}
 FREE2FA_AUTO_REG_ENABLED=${FREE2FA_AUTO_REG_ENABLED}
 FREE2FA_BYPASS_ENABLED=${FREE2FA_BYPASS_ENABLED}
 RADIUS_CLIENT_SECRET=${RADIUS_CLIENT_SECRET}
+REQUIRE_MESSAGE_AUTHENTICATOR=${REQUIRE_MESSAGE_AUTHENTICATOR}
 FREE2FA_TIMEOUT=${FREE2FA_TIMEOUT}
 RADIUS_START_SERVERS=${RADIUS_START_SERVERS}
 RADIUS_MAX_SERVERS=${RADIUS_MAX_SERVERS}
@@ -318,6 +295,8 @@ prompt_env_configuration() {
     FREE2FA_BYPASS_ENABLED=$(whiptail --inputbox "Enter BYPASS_ENABLED (default true):" 8 78 true --title "FREE2FA_BYPASS_ENABLED" 3>&1 1>&2 2>&3)
     check_if_cancel
     RADIUS_CLIENT_SECRET=$(whiptail --inputbox "Enter RADIUS_CLIENT_SECRET (default secret123):" 8 78 secret123 --title "RADIUS_CLIENT_SECRET" 3>&1 1>&2 2>&3)
+    check_if_cancel
+    REQUIRE_MESSAGE_AUTHENTICATOR=$(whiptail --inputbox "Require mandatory Message-Authenticator attribute in RADIUS messages (default false):" 8 78 false --title "REQUIRE_MESSAGE_AUTHENTICATOR" 3>&1 1>&2 2>&3)
     check_if_cancel
     RADIUS_CLIENT_IP=$(whiptail --inputbox "Enter RADIUS_CLIENT_IP (default 0.0.0.0):" 8 78 "0.0.0.0" --title "RADIUS_CLIENT_IP" 3>&1 1>&2 2>&3)
     check_if_cancel
@@ -607,6 +586,7 @@ cat <<EOF >"$TEMP_FILE"
 client $RADIUS_SITE_NAME {
   ipaddr = $RADIUS_CLIENT_IP
   secret = $RADIUS_CLIENT_SECRET
+  require_message_authenticator = $REQUIRE_MESSAGE_AUTHENTICATOR
 }
 EOF
 
@@ -631,7 +611,7 @@ cat <<EOF >"$TEMP_FILE"
 cd "$CURRENT_DIR"
 PATH_TO_CA_CERT=$PATH_TO_CA_CERT
 # Starting Docker Compose
-docker-compose up -d
+docker compose up -d
 
 # Checking service availability
 while true; do
@@ -686,7 +666,7 @@ cat <<EOF >"$TEMP_FILE"
 cd "$CURRENT_DIR"
 
 # Stopping Docker Compose
-docker-compose stop
+docker compose stop
 
 # Stopping FreeRADIUS
 service freeradius stop
@@ -787,7 +767,7 @@ fi
 if whiptail --yesno "Do you want to run Docker Compose and the FreeRADIUS service?" 10 60 --title "Starting Docker Compose and FreeRADIUS"; then
     # Running Docker Compose
     echo "Running Docker Compose..."
-    if docker-compose pull; then
+    if docker compose pull; then
         echo "The images have been downloaded"
     else
         echo "Failed to download the Docker images. Please check the configuration."
@@ -812,11 +792,11 @@ echo -e "\033[34mTo manage the free2fa service, you can use the following comman
 - To stop the free2fa service, enter: \033[32mservice free2fa stop\033[0m\n\
 - To start the free2fa service, enter: \033[32mservice free2fa start\033[0m\n\n\
 To view the Docker logs follow to the installation directory, please use the command:\n\
-\033[32mdocker-compose logs -f\033[0m\n\n\
+\033[32mdocker compose logs -f\033[0m\n\n\
 For accessing the FreeRADIUS logs, execute the following command:\n\
 \033[32mcat /var/log/freeradius/radius.log\033[0m\n\n\
 or you can see all logs in one window use the command:\n\
-\033[32mtail -f /var/log/freeradius/radius.log & docker-compose logs -f\n\n
+\033[32mtail -f /var/log/freeradius/radius.log & docker compose logs -f\n\n
 \033[34mTo initiate FreeRADIUS in debug mode, ensure to stop the FreeRADIUS service first by executing:\n\
 \033[32mservice freeradius stop\033[0m\n\
 Then, to start FreeRADIUS in debug mode, enter:\n\

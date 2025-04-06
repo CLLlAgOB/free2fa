@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM alpine
 
 RUN apk --no-cache add openssl curl bash
 

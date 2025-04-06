@@ -1,5 +1,5 @@
-fastapi
-aiogram~=3.3.0
-uvicorn
-aiosqlite
-pydantic
+fastapi==0.115.12
+aiogram~=3.19
+uvicorn==0.34
+aiosqlite==0.21
+pydantic~=2.10

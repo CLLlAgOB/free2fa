@@ -121,6 +121,8 @@ add_config() {
     read -p "Enter the base port for the new configuration: " config_port
     read -p "Enter the IP address of the client: " ip
     read -p "Enter the secret for the client: " secret
+    read -p "Enter value for require_message_authenticator (true/false): " req_msg_auth
+    read -p "Enter value for limit_proxy_state (true/false): " lim_proxy_state
     if [[ $use_fully_qualified_names == "True" ]]; then
         read -p "Enter the groups that are allowed access in the format groupname@domain.local,group2@domain.local: " groups
     else
@@ -221,12 +223,16 @@ EOF
     template="client __name__ {
     ipaddr = __ip__
     secret = __secret__
+    require_message_authenticator = __req_msg_auth__
+    limit_proxy_state = __lim_proxy_state__
 }"
 
     # Replacing placeholders in a template
     config="${template/__name__/$full_config_name}"
     config="${config/__ip__/$ip}"
     config="${config/__secret__/$secret}"
+    config="${config/__req_msg_auth__/$req_msg_auth}"
+    config="${config/__lim_proxy_state__/$lim_proxy_state}"
 
     # Adding a new configuration to the end of the file
     {

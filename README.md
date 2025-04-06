@@ -140,7 +140,7 @@ You can use the following commands to manage the free2fa service:
 - To start the free2fa service, type: service free2fa start  
 
 To view the Docker logs following the installation directory, use the command:  
-docker-compose logs -f  
+docker compose logs -f  
 To access the FreeRADIUS logs, run the following command:  
 cat /var/log/freeradius/radius.log  
 To start FreeRADIUS in debug mode, first stop the FreeRADIUS service by running:  
@@ -189,13 +189,13 @@ The bot will send a message with the user's id in response.
 ### How do I upgrade from a previous version?
 
 1. Go to the installation directory.
-2. ```docker-compose down``` You can add -t 0 if you don't want to wait for completion.
-3.  ```docker-compose pull```
-4.  ```docker-compose up -d```
+2. ```docker compose down``` You can add -t 0 if you don't want to wait for completion.
+3.  ```docker compose pull```
+4.  ```docker compose up -d```
 
 If you want, you can see the logs after running 
 ```shell
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Change History:
@@ -256,3 +256,30 @@ The "Free2FA" project offers two additional editions of the application designed
 2. **Edition with Portal and One-Time Passwords (OTP)**: This version combines portal-based authentication with one-time passwords and Telegram push notifications. It is aimed at organizations and individual users seeking a convenient and secure form of two-factor authentication. GitHub repository: [Free2FAPlus](https://github.com/CLLlAgOB/free2faplus).
 
 These editions expand the functionality of the base "Free2FAPlus" version, providing additional options for securing and managing access to digital resources.
+
+**06.04.2025**  
+
+- The previous version is available by tag v1.0 in the docker hub.
+- Updated components and dependencies.  
+- Switched from docker-compose to docker compose.  
+- Added support for RADIUS Message Authenticator Attribute.
+
+**To upgrade from a previous version:**
+1. backup the host (not mandatory but desirable).
+2. update the client config ```/etc/freeradius/3.0/clients.conf```  manually by adding require_message_authenticator and limit_proxy_state = true (if your client supports) otherwise false:
+```
+require_message_authenticator = true
+limit_proxy_state = true
+```
+3. Update FreeRadius with commands: 
+```shell
+sudo apt update
+sudo apt install --only-upgrade freeradius freeradius-common freeradius-config
+```
+4. in the folder where docker-compose.yml is located, run the command under root.:
+```shell
+sudo docker compose down -t 0
+sudo docker compose pull
+sudo docker compose up -d
+sudo service freeradius restart
+```

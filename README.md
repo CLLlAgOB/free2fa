@@ -271,15 +271,26 @@ These editions expand the functionality of the base "Free2FAPlus" version, provi
 require_message_authenticator = true
 limit_proxy_state = true
 ```
-3. Update FreeRadius with commands: 
+3. Update the remaining components using the [How to update](#how-to-update) instructions.
+
+**07.04.2025**
+
+In admin_api:
+- Fixed DeprecationWarning: datetime.datetime.utcnow()
+- Fixed Error 'bcrypt' has no attribute '__about__'
+
+Update the components using the [How to update](#how-to-update) instructions.
+
+
+## How to update
+1. Update FreeRadius with commands: 
 ```shell
 sudo apt update
 sudo apt install --only-upgrade freeradius freeradius-common freeradius-config
 ```
-4. in the folder where docker-compose.yml is located, run the command under root.:
+1. in the folder where docker-compose.yml is located, run the command under root.:
 ```shell
 sudo docker compose down -t 0
 sudo docker compose pull
 sudo docker compose up -d
 sudo service freeradius restart
-```

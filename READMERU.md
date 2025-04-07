@@ -265,15 +265,29 @@ docker compose logs -f
 require_message_authenticator = true
 limit_proxy_state = true
 ```
-3. Обновите FreeRadius командами: 
+3. Обновите остальные компоненты используя инструкцию [Как обновить](#how-to-update)
+
+**07.04.2025**
+
+В admin_api:
+- Исправлено DeprecationWarning: datetime.datetime.utcnow()
+- Ошибка 'bcrypt' has no attribute '__about__'
+
+Обновите компоненты используя инструкцию [Как обновить](#how-to-update)
+
+
+## How to update
+1. Обновите FreeRadius командами: 
 ```shell
 sudo apt update
 sudo apt install --only-upgrade freeradius freeradius-common freeradius-config
 ```
-4. в папке где лежит docker-compose.yml выполните команду под рутом:
+1. в папке где лежит docker-compose.yml выполните команду под рутом:
 ```shell
 sudo docker compose down -t 0
 sudo docker compose pull
 sudo docker compose up -d
 sudo service freeradius restart
 ```
+
+

@@ -1,7 +1,9 @@
-#!/bin/sh
-# change permission
-chown -R apiuser:apiuser /app/certs/ /opt/db/
-chmod 770 -R /opt/db/
+#!/usr/bin/env sh
+set -e
 
-# Starting the container's main command
-su -s /bin/bash apiuser -c "python adminapi.py"
+# Preparation of rights
+chown -R apiuser:apiuser /app/certs /opt/db
+chmod 750 /opt/db
+
+# Launching the application from apiuser
+exec gosu apiuser python /app/adminapi.py

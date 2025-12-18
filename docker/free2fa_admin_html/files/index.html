@@ -1,116 +1,118 @@
-<!-- 
-index.html
-Copyright (C) 2024 Voloskov Aleksandr Nikolaevich
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version. -->
-
-<!doctype html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User Management</title>
-  <link rel="stylesheet" href="./static/styles.css" />
-</head>
-
-<body>
-  <div id="notification" class="notification-container"></div>
-
-  <div id="loginSection">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input type="text" id="loginUsername" placeholder="username" required />
-      <input type="password" id="loginPassword" placeholder="Password" required />
-      <button type="submit">Login</button>
-    </form>
-    <!-- Password Reset Button -->
-    <div id="resetPasswordButtonDiv">
-      <button id="resetPasswordButton">Reset Password</button>
-    </div>
-    <div id="resetPasswordSection">
-      <h2>Reset Password</h2>
-      <form id="resetPasswordForm">
-        <input type="text" id="encryptionKey" placeholder="Encryption Key" required />
-        <button type="submit">Submit</button>
-      </form>
-    </div>
-  </div>
-  <!-- Password Change Form -->
-  <div id="changePasswordSection">
-    <h2>Change Password</h2>
-    <form id="changePasswordForm">
-      <input type="password" id="changePasswordOldPassword" placeholder="Current Password" required />
-      <input type="password" id="newPassword" placeholder="New Password" required />
-      <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required />
-      <span id="passwordMismatch">Passwords do not match</span>
-      <button type="submit">Change Password</button>
-    </form>
-  </div>
-
-  <div id="mainContent">
-    <h2>Add User</h2>
-    <form id="addUserForm">
-      <input type="text" id="username" placeholder="domain\username" required />
-      <input type="number" id="telegramId" placeholder="Telegram ID" required />
-      <input type="checkbox" id="isBypass" /> Is Bypass
-      <button type="submit">Add User</button>
-    </form>
-
-    <h2>Users</h2>
-    <button id="loadUsers">Load Users</button>
-    <div id="usersTableContainer">
-      <table id="usersTable">
-        <caption>User Table</caption>
-        <thead>
-          <tr>
-            <th>User Name</th>
-            <th>Telegram ID</th>
-            <th>Bypass</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Rows with user data -->
-        </tbody>
-      </table>
-    </div>
-    <h2>Search User</h2>
-    <form id="searchUserForm">
-      <input type="text" id="searchUsername" placeholder="domain\username to search" required />
-      <button type="submit">Search</button>
-    </form>
-
-    <div id="usersList">
-      <!-- Search results -->
-    </div>
-
-    <h2>Edit User</h2>
-    <div id="editUserSection">
-      <form id="editUserForm">
-        <input type="hidden" id="editUsernameOriginal" />
-        <input type="text" id="editUsername" placeholder="domain\username" />
-        <input type="number" id="editTelegramId" placeholder="New Telegram ID" />
-        <input type="checkbox" id="editisBypass" /> Is Bypass
-        <button type="submit">Update User</button>
-      </form>
-      <input type="hidden" id="originalUsername" />
-    </div>
-    <div id="logoutButtonDiv">
-      <button id="logoutButton">Logout</button>
-    </div>
-    <div id="changePasswordButtonContainer" class="change-password-button-container">
-      <button id="changePasswordButton">Change Admin Password</button>
-    </div>
-    <div id="downloadCA">
-      <a href="/certs/ca.crt" download class="padded-link">Download CA Certificate</a>
-    </div>
-  </div>
-  <script src="./static/control.js"></script>
-</body>
-
-</html>
+    <!-- 
+    index.html
+    Copyright (C) 2025 Voloskov Aleksandr Nikolaevich
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version. -->
+    
+    <!doctype html>
+    <html lang="en">
+    
+    <head>
+      <meta charset="UTF-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>User Management</title>
+      <link rel="stylesheet" href="./static/styles.css" />
+      <link rel="stylesheet" href="./static/compat.css" />
+      <script src="./static/compat.js"></script>
+    </head>
+    
+    <body>
+      <div id="notification" class="notification-container"></div>
+    
+      <div id="loginSection">
+        <h2>Login</h2>
+        <form id="loginForm">
+          <input type="text" id="loginUsername" placeholder="username" required />
+          <input type="password" id="loginPassword" placeholder="Password" required />
+          <button type="submit">Login</button>
+        </form>
+        <!-- Password Reset Button -->
+        <div id="resetPasswordButtonDiv">
+          <button id="resetPasswordButton">Reset Password</button>
+        </div>
+        <div id="resetPasswordSection">
+          <h2>Reset Password</h2>
+          <form id="resetPasswordForm">
+            <input type="text" id="encryptionKey" placeholder="Encryption Key" required />
+            <button type="submit">Submit</button>
+          </form>
+        </div>
+      </div>
+      <!-- Password Change Form -->
+      <div id="changePasswordSection">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <input type="password" id="changePasswordOldPassword" placeholder="Current Password" required />
+          <input type="password" id="newPassword" placeholder="New Password" required />
+          <input type="password" id="confirmNewPassword" placeholder="Confirm New Password" required />
+          <span id="passwordMismatch">Passwords do not match</span>
+          <button type="submit">Change Password</button>
+        </form>
+      </div>
+    
+      <div id="mainContent">
+        <h2>Add User</h2>
+        <form id="addUserForm">
+          <input type="text" id="username" placeholder="domain\username" required />
+          <input type="number" id="telegramId" placeholder="Telegram ID" required />
+          <input type="checkbox" id="isBypass" /> Is Bypass
+          <button type="submit">Add User</button>
+        </form>
+    
+        <h2>Users</h2>
+        <button id="loadUsers">Load Users</button>
+        <div id="usersTableContainer">
+          <table id="usersTable">
+            <caption>User Table</caption>
+            <thead>
+              <tr>
+                <th>User Name</th>
+                <th>Telegram ID</th>
+                <th>Bypass</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows with user data -->
+            </tbody>
+          </table>
+        </div>
+        <h2>Search User</h2>
+        <form id="searchUserForm">
+          <input type="text" id="searchUsername" placeholder="domain\username to search" required />
+          <button type="submit">Search</button>
+        </form>
+    
+        <div id="usersList">
+          <!-- Search results -->
+        </div>
+    
+        <h2>Edit User</h2>
+        <div id="editUserSection">
+          <form id="editUserForm">
+            <input type="hidden" id="editUsernameOriginal" />
+            <input type="text" id="editUsername" placeholder="domain\username" />
+            <input type="number" id="editTelegramId" placeholder="New Telegram ID" />
+            <input type="checkbox" id="editisBypass" /> Is Bypass
+            <button type="submit">Update User</button>
+          </form>
+          <input type="hidden" id="originalUsername" />
+        </div>
+        <div id="logoutButtonDiv">
+          <button id="logoutButton">Logout</button>
+        </div>
+        <div id="changePasswordButtonContainer" class="change-password-button-container">
+          <button id="changePasswordButton">Change Admin Password</button>
+        </div>
+        <div id="downloadCA">
+          <a href="/certs/ca.crt" download class="padded-link">Download CA Certificate</a>
+        </div>
+      </div>
+      <script src="./static/loader.js"></script>
+    </body>
+    
+    </html>

@@ -1,23 +1,20 @@
-FROM nginx
+FROM nginx:1-alpine
 
-WORKDIR /app
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends apache2-utils \
-    && apt-get clean \
-    && update-ca-certificates \
-    && rm -rf /var/lib/apt/lists/* 
-    
-COPY entrypoint.sh ./
-
-RUN chmod +x ./entrypoint.sh
-
-COPY ./files/ /usr/share/nginx/html/
+RUN set -eux; \
+    apk add --no-cache apache2-utils ca-certificates; \
+    update-ca-certificates
 
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./files/ /usr/share/nginx/html/
 
-EXPOSE 443
+COPY --chmod=0755 entrypoint.sh /usr/local/bin/custom-entrypoint.sh
 
-RUN chmod +x ./entrypoint.sh
+ENV SRC_CA=/usr/local/share/ca-certificates/ca.crt \
+    NGINX_CERT_DIR=/usr/share/nginx/html/certs
 
-ENTRYPOINT ["./entrypoint.sh"]
+EXPOSE 80 443
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1
+
+ENTRYPOINT ["/usr/local/bin/custom-entrypoint.sh"]

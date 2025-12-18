@@ -175,6 +175,8 @@ Used for secure access to the admin area.
 You should write it in dns or hosts for easy access.
 - `RADIUS_CLIENT_IP`: IP radius of the client. It is highly recommended to
 specify from which IP to expect requests for authorization.
+- `THROTTLE_ATTEMPTS`: The maximum number of failed PAM password attempts per user before temporary lockout (default is 5).
+- `THROTTLE_COOLDOWN_SECONDS`: Block duration / cache TTL in seconds (default is 300).
 
 
 You will need to change the admin password at the first login.
@@ -281,6 +283,24 @@ In admin_api:
 
 Update the components using the [How to update](#how-to-update) instructions.
 
+**18.12.2025**
+
+- Added cache/throttling (password brute force protection) on the FreeRADIUS side: after `THROTTLE_ATTEMPTS` Incorrect passwords for the user result in a temporary lockout for `THROTTLE_COOLDOWN_SECONDS` seconds..
+- Parameters added `.env`: `THROTTLE_ATTEMPTS`, `THROTTLE_COOLDOWN_SECONDS`.
+- Updated Docker images of components (obtained via `docker compose pull`).
+
+How to update from previous versions:
+
+1. Update the containers according to the instructions below (docker compose down/pull/up) using the instructions [How to update].(#how-to-update)
+2. Run `install.sh` again and select the `update` mode so that the script:
+   - Run `install.sh` again and select the `update` mode so that the script
+   - updated FreeRADIUS configurations (including cache/throttle).
+3. If you do not want to enable throttle, set `THROTTLE_ATTEMPTS=999` (or another large number) in `.env`.
+
+### Backup / Restore
+
+- In `update` mode, the script creates archives in `./backups` (in the installation directory).
+- To roll back, run `install.sh` again and select `restore` mode (it will restore files from the selected archive).
 
 ## How to update
 1. Update FreeRadius with commands: 

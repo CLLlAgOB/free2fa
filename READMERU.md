@@ -173,7 +173,8 @@ freeradius -Xx
 Необходимо прописать его в днс или hosts для удобства доступа.
 - `RADIUS_CLIENT_IP`: Ип радиус клиента. Крайне рекомендую указать с какого IP ожидать
 запросы на авторизацию.
-
+- `THROTTLE_ATTEMPTS`: Максимальное количество неудачных попыток ввода пароля PAM на одного пользователя перед временной блокировкой (по умолчанию 5).
+- `THROTTLE_COOLDOWN_SECONDS`: Продолжительность блокировки / TTL кэша в секундах (по умолчанию 300).
 
 
 При первом входе необходимо будет сменить пароль администратора.
@@ -276,18 +277,49 @@ limit_proxy_state = true
 Обновите компоненты используя инструкцию [Как обновить](#how-to-update)
 
 
+**18.12.2025**
+
+- Добавлен кэш/троттлинг (защита от перебора пароля) на стороне FreeRADIUS: после `THROTTLE_ATTEMPTS` неверных паролей для пользователя вводится временная блокировка на `THROTTLE_COOLDOWN_SECONDS` секунд.
+- Добавлены параметры `.env`: `THROTTLE_ATTEMPTS`, `THROTTLE_COOLDOWN_SECONDS`.
+- Обновлены Docker-образы компонентов (получаются через `docker compose pull`).
+
+Как обновиться с предыдущих версий:
+
+1. Обновите контейнеры по инструкции ниже (docker compose down/pull/up) используя инструкцию [Как обновить](#how-to-update)
+2. Запустите `install.sh` повторно и выберите режим `update`, чтобы скрипт:
+   - сделал backup файлов (каталог `./backups` в директории установки но свой бекап тоже хорошо бы сделать),
+   - обновил конфиги FreeRADIUS (включая cache/throttle).
+3. Если вы не хотите включать throttle — установите `THROTTLE_ATTEMPTS=999` (или другое большое число) в `.env`.
+
+
+### Backup / Restore
+
+- При режиме `update` скрипт создаёт архивы в `./backups` (в директории установки).
+- Для отката запустите `install.sh` ещё раз и выберите режим `restore` (он восстановит файлы из выбранного архива).
+- 
 ## How to update
 1. Обновите FreeRadius командами: 
 ```shell
 sudo apt update
 sudo apt install --only-upgrade freeradius freeradius-common freeradius-config
 ```
-1. в папке где лежит docker-compose.yml выполните команду под рутом:
+2. в папке где лежит docker-compose.yml выполните команду под рутом:
 ```shell
 sudo docker compose down -t 0
 sudo docker compose pull
 sudo docker compose up -d
 sudo service freeradius restart
 ```
+3. Примените обновления конфигов на хосте (cache/throttle) и сделайте backup перед изменениями:
 
+```shell
+cd /opt/2fa
+curl -o install.sh https://raw.githubusercontent.com/CLLlAgOB/free2fa/main/install.sh && bash install.sh
+# если скрипт обнаружит установленную систему — выберите режим: update
+```
 
+4. Перезапустите сервисы (если скрипт не сделал это автоматически):
+
+```shell
+sudo service freeradius restart
+```

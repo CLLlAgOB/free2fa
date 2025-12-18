@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # generate-certs.sh
-# Copyright (C) 2024 Voloskov Aleksandr Nikolaevich
+# Copyright (C) 2025 Voloskov Aleksandr Nikolaevich
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+set -Eeuo pipefail
+
 # Create directories for CA root certificate
-mkdir -p /certs/rootca
-mkdir -p /certs/rootpca
+mkdir -p /certs/rootca /certs/rootpca
 
 # CA root certificate parameters
 CA_KEY="/certs/rootpca/ca.key" # Path for the private key
@@ -20,32 +21,37 @@ CA_EXPIRY_DAYS=${CA_EXPIRY_DAYS:-5475} # Default to 15 years if not set
 
 # Function for logging
 log() {
-    # Date and time format: YYYYY-MM-DD HH:MM:SS
+    # Date and time format: YYYY-MM-DD HH:MM:SS
+    local level=${1:-INFO}
+    local message=${2:-}
+    local timestamp
     timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    echo "$timestamp - free2fa_setup - $1 - $2"
+    echo "$timestamp - free2fa_setup - $level - $message"
+    return 0
 }
 
 # Check certificate expiry (returns 0 if the certificate is valid for more than 30 days)
 check_cert_expiry() {
-    CERT=$1
+    local CERT=$1
     log "INFO" "Checking expiry for certificate: $CERT"
 
-    if [ -f "$CERT" ]; then
+    if [[ -f "$CERT" ]]; then
+        local EXPIRY_DATE
         EXPIRY_DATE=$(openssl x509 -enddate -noout -in "$CERT" | cut -d= -f2)
         # Convert the expiry date to a format acceptable by the date command
-        FORMATTED_EXPIRY_DATE=$(date -d "${EXPIRY_DATE// GMT/}" +%s 2>/dev/null)
-
-        if [ $? -ne 0 ]; then
+        local FORMATTED_EXPIRY_DATE
+        if ! FORMATTED_EXPIRY_DATE=$(date -d "${EXPIRY_DATE// GMT/}" +%s 2>/dev/null); then
             log "INFO" "Error processing expiry date: $EXPIRY_DATE"
             return 1
         fi
 
+        local CURRENT_SECONDS DIFF_SECONDS DAYS_LEFT
         CURRENT_SECONDS=$(date +%s)
         DIFF_SECONDS=$((FORMATTED_EXPIRY_DATE - CURRENT_SECONDS))
         DAYS_LEFT=$((DIFF_SECONDS / 86400))
         log "INFO" "Days until expiry: $DAYS_LEFT"
 
-        if [ $DAYS_LEFT -gt 30 ]; then
+        if (( DAYS_LEFT > 30 )); then
             log "INFO" "Certificate is valid for more than 30 days."
             return 0
         else
@@ -60,8 +66,8 @@ check_cert_expiry() {
 
 # Function to generate certificates for microservices
 generate_service_cert() {
-    SERVICE=$1
-    SERVICE_EXPIRY_DAYS=${2:-365} # Default to 1 year if not set
+    local SERVICE=$1
+    local SERVICE_EXPIRY_DAYS=${2:-365} # Default to 1 year if not set
     SERVICE_DIR="/certs/${SERVICE}"
     mkdir -p "$SERVICE_DIR"
     SERVICE_KEY="${SERVICE_DIR}/${SERVICE}.key"
@@ -84,9 +90,18 @@ generate_service_cert() {
     echo "subjectAltName = @alt_names" >>"$SERVICE_CONFIG"
     echo "" >>"$SERVICE_CONFIG"
     echo "[alt_names]" >>"$SERVICE_CONFIG"
-    echo "DNS.1 = $SERVICE" >>"$SERVICE_CONFIG"
-    if [ ! -z "$ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML" ]; then
-        echo "DNS.2 = $ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML" >>"$SERVICE_CONFIG"
+
+    dns_i=1
+    echo "DNS.${dns_i} = ${SERVICE}" >>"$SERVICE_CONFIG"
+    ((dns_i++))
+
+    echo "DNS.${dns_i} = localhost" >>"$SERVICE_CONFIG"
+    ((dns_i++))
+
+    if [[ -n "${ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML:-}" \
+        && "${ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML}" != "localhost" \
+        && "${ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML}" != "${SERVICE}" ]]; then
+    echo "DNS.${dns_i} = ${ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML}" >>"$SERVICE_CONFIG"
     fi
 
     if check_cert_expiry "$SERVICE_CERT"; then
@@ -100,22 +115,23 @@ generate_service_cert() {
         # Sign the certificate using the CA root
         openssl x509 -req -in "$SERVICE_CSR" -CA "$CA_CERT" -CAkey "$CA_KEY" -CAcreateserial -out "$SERVICE_CERT" -days "$SERVICE_EXPIRY_DAYS" -sha256 -extfile "$SERVICE_CONFIG" -extensions v3_req
     fi
+    return 0
 }
 
 # Generate/update the CA root certificate if it does not exist or is expired
-if ! check_cert_expiry $CA_CERT; then
+if ! check_cert_expiry "$CA_CERT"; then
     log "INFO" "Generating/updating the CA root certificate."
     openssl genrsa -out "$CA_KEY" 4096
-    openssl req -x509 -new -nodes -key "$CA_KEY" -sha256 -days "$CA_EXPIRY_DAYS" -out "$CA_CERT" -subj "$CA_SUBJECT"
+    openssl req -x509 -new -key "$CA_KEY" -sha256 -days "$CA_EXPIRY_DAYS" -out "$CA_CERT" -subj "$CA_SUBJECT"
     # Convert the CA root public certificate to DER format for Windows
-    openssl x509 -inform PEM -in $CA_CERT -outform DER -out /certs/rootca/ca.der
+    openssl x509 -inform PEM -in "$CA_CERT" -outform DER -out /certs/rootca/ca.der
 fi
 
 # Generate/update certificates for each microservice
-generate_service_cert "free2fa_admin_html" "$CA_EXPIRY_DAYS" "$ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML"
-ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML="localhost"
-generate_service_cert "free2fa_api" "$CA_EXPIRY_DAYS" "$ADDITIONAL_DNS_NAME_FOR_ADMIN_HTML"
-generate_service_cert "free2fa_admin_api" "$CA_EXPIRY_DAYS"
+for service in free2fa_admin_api free2fa_api; do
+    generate_service_cert "$service" "$CA_EXPIRY_DAYS"
+done
+generate_service_cert "free2fa_admin_html" "$CA_EXPIRY_DAYS"
 
 log "INFO" "Waiting for admin api availability"
 until curl -s --cacert /certs/rootca/ca.crt -o /dev/null -w '%{http_code}' https://free2fa_admin_api:8000/health | grep -q "200"; do

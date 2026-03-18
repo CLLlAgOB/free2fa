@@ -3,3 +3,4 @@ aiogram~=3.19
 uvicorn==0.34
 aiosqlite==0.21
 pydantic~=2.10
+aiohttp-socks~=0.11.0

@@ -1171,6 +1171,7 @@ create_env_file() {
 CA_EXPIRY_DAYS=${CA_EXPIRY_DAYS}
 FREE2FA_TELEGRAM_BOT_TOKEN=${FREE2FA_TELEGRAM_BOT_TOKEN}
 FREE2FA_TELEGRAM_BOT_LANGUAGE=${FREE2FA_TELEGRAM_BOT_LANGUAGE}
+FREE2FA_TELEGRAM_BOT_PROXY=${FREE2FA_TELEGRAM_BOT_PROXY}
 FREE2FA_AUTO_REG_ENABLED=${FREE2FA_AUTO_REG_ENABLED}
 FREE2FA_BYPASS_ENABLED=${FREE2FA_BYPASS_ENABLED}
 RADIUS_CLIENT_SECRET=${RADIUS_CLIENT_SECRET}
@@ -1196,6 +1197,8 @@ prompt_env_configuration() {
     FREE2FA_TELEGRAM_BOT_TOKEN=$(whiptail --inputbox "Enter TELEGRAM_BOT_TOKEN (default your-key):" 8 78 your-key --title "FREE2FA_TELEGRAM_BOT_TOKEN" 3>&1 1>&2 2>&3)
     check_if_cancel
     FREE2FA_TELEGRAM_BOT_LANGUAGE=$(whiptail --inputbox "Enter TELEGRAM_BOT_LANGUAGE (default ru):" 8 78 ru --title "FREE2FA_TELEGRAM_BOT_LANGUAGE" 3>&1 1>&2 2>&3)
+    check_if_cancel
+    FREE2FA_TELEGRAM_BOT_PROXY=$(whiptail --inputbox "Enter TELEGRAM_BOT_PROXY (leave empty to disable, example socks5://127.0.0.1:1080):" 10 78 "" --title "FREE2FA_TELEGRAM_BOT_PROXY" 3>&1 1>&2 2>&3)
     check_if_cancel
     FREE2FA_AUTO_REG_ENABLED=$(whiptail --inputbox "Enter AUTO_REG_ENABLED (default true):" 8 78 true --title "FREE2FA_AUTO_REG_ENABLED" 3>&1 1>&2 2>&3)
     check_if_cancel

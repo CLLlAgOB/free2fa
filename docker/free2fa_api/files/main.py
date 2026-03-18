@@ -36,7 +36,33 @@ router = Router()
 
 # FastAPI and aiogram initialization
 app = FastAPI()
-bot = Bot(token=Config.TOKEN, session=AiohttpSession(timeout=3))
+
+
+def build_bot_session():
+    """Create aiogram session with optional proxy support."""
+    session_kwargs = {"timeout": 3}
+    if Config.TELEGRAM_BOT_PROXY:
+        session_kwargs["proxy"] = Config.TELEGRAM_BOT_PROXY
+    return AiohttpSession(**session_kwargs)
+
+
+def is_proxy_error(exc: Exception) -> bool:
+    """Best-effort proxy error detection without binding to private exception paths."""
+    exc_name = exc.__class__.__name__.lower()
+    exc_text = str(exc).lower()
+    proxy_markers = (
+        "proxy",
+        "socks",
+        "couldn't connect to proxy",
+        "cannot connect to proxy",
+    )
+    return (
+        any(marker in exc_name for marker in proxy_markers)
+        or any(marker in exc_text for marker in proxy_markers)
+    )
+
+
+bot = Bot(token=Config.TOKEN, session=build_bot_session())
 dp = Dispatcher()
 dp.include_router(router)
 
@@ -253,7 +279,8 @@ async def handle_auto_reg_or_bypass(normalized_username, telegram_id, is_bypass)
         logger.debug("Auto registration user: %s", normalized_username)
         await create_new_user(normalized_username, 0)
         telegram_id = 0
-    bypass_condition = is_bypass or (Config.BYPASS_ENABLED and telegram_id == 0)
+    bypass_condition = is_bypass or (
+        Config.BYPASS_ENABLED and telegram_id == 0)
     if bypass_condition:
         logger.info("Authentication request bypassed by user %s",
                     normalized_username)
@@ -261,7 +288,8 @@ async def handle_auto_reg_or_bypass(normalized_username, telegram_id, is_bypass)
     if telegram_id is None:
         logger.warning("User %s not found", normalized_username)
     else:
-        logger.warning("2fa is not configured for user %s", normalized_username)
+        logger.warning("2fa is not configured for user %s",
+                       normalized_username)
     return response_403()
 
 
@@ -401,6 +429,7 @@ async def answer_limited_message(message, text):
     await MessageLimiter.wait_for_message_slot()
     return await message.answer(text)
 
+
 async def send_limited_edit_message(chat_id, message_id, reply_markup=None):
     """Method of message modification"""
     await MessageLimiter.wait_for_message_slot()
@@ -423,16 +452,37 @@ async def start_aiogram():
     """Bot launch function"""
     while True:
         try:
-            logger.info("Bot Launch...")
+            if Config.TELEGRAM_BOT_PROXY:
+                logger.info("Bot launch via proxy: %s",
+                            Config.TELEGRAM_BOT_PROXY)
+            else:
+                logger.info("Bot launch without proxy")
+
             await dp.start_polling(bot)
             logger.info("The bot has been successfully launched.")
-            break  # Exit the loop after a successful start
+            break
+
+        except asyncio.CancelledError:
+            raise
+
         except aiogram_exceptions.TelegramNetworkError as network_err:
-            logger.warning(f"Telegram network error: {network_err}")
-        except aiogram_exceptions.AiogramError as other_err:
-            logger.error(f"Unhandled exception: {other_err}")
+            if Config.TELEGRAM_BOT_PROXY and is_proxy_error(network_err):
+                logger.warning(
+                    "Telegram proxy is unavailable: %s", network_err
+                )
+            else:
+                logger.warning("Telegram network error: %s", network_err)
+
+        except Exception as err:
+            if Config.TELEGRAM_BOT_PROXY and is_proxy_error(err):
+                logger.warning(
+                    "Telegram proxy is unavailable: %s", err
+                )
+            else:
+                logger.exception("Unhandled bot error: %s", err)
+
         logger.warning("Retry in 5 seconds....")
-        await asyncio.sleep(5)  # Delay before the next attempt
+        await asyncio.sleep(5)
 
 
 async def main():

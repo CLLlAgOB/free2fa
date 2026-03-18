@@ -153,6 +153,12 @@ freeradius -Xx
 - `CA_EXPIRY_DAYS`: Certificate validity, days.
 - `FREE2FA_TELEGRAM_BOT_TOKEN`: Token of your Telegram bot.
 - `FREE2FA_TELEGRAM_BOT_LANGUAGE`: (ru or en) Language model.
+- `FREE2FA_TELEGRAM_BOT_PROXY`: Optional proxy for Telegram bot requests.
+Examples:
+  `socks5://proxy-host:1080`
+  `socks5://user:password@proxy-host:1080`
+  `http://proxy-host:3128`
+If empty or not specified, proxy is disabled.
 - `FREE2FA_AUTO_REG_ENABLED`: Automatic registration of new users.
 (New users will be created in the database automatically with Telegram ID 0,
 on the administrator portal you need to specify the real ID).
@@ -177,7 +183,6 @@ You should write it in dns or hosts for easy access.
 specify from which IP to expect requests for authorization.
 - `THROTTLE_ATTEMPTS`: The maximum number of failed PAM password attempts per user before temporary lockout (default is 5).
 - `THROTTLE_COOLDOWN_SECONDS`: Block duration / cache TTL in seconds (default is 300).
-
 
 You will need to change the admin password at the first login.
 
@@ -296,6 +301,32 @@ How to update from previous versions:
    - Run `install.sh` again and select the `update` mode so that the script
    - updated FreeRADIUS configurations (including cache/throttle).
 3. If you do not want to enable throttle, set `THROTTLE_ATTEMPTS=999` (or another large number) in `.env`.
+
+**18.03.2026**
+
+In free2fa_api:
+
+- Added optional proxy support for the Telegram bot.
+- New environment variable: `FREE2FA_TELEGRAM_BOT_PROXY`.
+- By default, proxy is disabled. If the parameter is empty or not set, the bot works without a proxy.
+- Added safer bot startup behavior: if the configured proxy is unavailable, the application no longer terminates the bot task with an unhandled exception.
+- Now the application writes a warning to the log that the Telegram proxy is unavailable and continues retrying bot startup.
+
+Examples:
+- without proxy: leave `FREE2FA_TELEGRAM_BOT_PROXY` empty
+- SOCKS5 proxy: `socks5://proxy-host:1080`
+- SOCKS5 proxy with authentication: `socks5://user:password@proxy-host:1080`
+- HTTP proxy: `http://proxy-host:3128`
+
+How to update from previous versions:
+
+1. Update the containers according to the instructions below (`docker compose down/pull/up`).
+2. If you want to use a proxy for Telegram bot traffic, add `FREE2FA_TELEGRAM_BOT_PROXY` to your `.env`.
+3. If you do not need a proxy, leave `FREE2FA_TELEGRAM_BOT_PROXY` empty or do not add it at all.
+4. If Docker Compose is used, it is recommended to pass the variable as:
+   `FREE2FA_TELEGRAM_BOT_PROXY=${FREE2FA_TELEGRAM_BOT_PROXY:-}`
+5. After updating, check the logs with:
+   `docker compose logs -f`
 
 ### Backup / Restore
 

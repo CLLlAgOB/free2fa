@@ -18,6 +18,16 @@ class Config:
     TOKEN = os.environ.get("FREE2FA_TELEGRAM_BOT_TOKEN", "none")
     # Language of bot interface (ru or en)
     LANGUAGE = os.environ.get("FREE2FA_TELEGRAM_BOT_LANGUAGE", "ru")
+     
+     # Optional proxy for Telegram Bot API requests.
+     # Empty value means proxy is disabled.
+     # Examples:
+     #   socks5://127.0.0.1:1080
+     #   http://proxy.local:3128
+     #   socks5://user:password@proxy.local:1080
+    TELEGRAM_BOT_PROXY = (
+         os.environ.get("FREE2FA_TELEGRAM_BOT_PROXY", "").strip() or None
+     )
     # Max message length from user
     MAX_MESSAGE_LENGTH = int(os.environ.get("FREE2FA_MAX_MESSAGE_LENGTH", 100))
     # Automatically creates users in the base while specifying telegram id 0
@@ -29,7 +39,7 @@ class Config:
         "FREE2FA_BYPASS_ENABLED", "false").lower() == "true"
     # How many seconds are given to respond
     # must also change the settings on the side of windows server
-    # specifying the response timeout response radius server that FREE2FA_TIMEOUT +1 (11)
+    # specifying the response timeout response radius server that FREE2FA_TIMEOUT  1 (11)
     FREE2FA_TIMEOUT = int(os.environ.get("FREE2FA_TIMEOUT", 10))
     # Allow all users without a push request if api.telegram.org is unavailable
     ALLOW_API_FAILURE_PASS = os.environ.get(
